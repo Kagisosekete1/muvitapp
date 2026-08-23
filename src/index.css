@@ -1,0 +1,336 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Facebook/Shazam inspired - Professional & Clean */
+    --background: 0 0% 100%;
+    --foreground: 220 13% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 13%;
+
+    --primary: 214 89% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 13% 13%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 214 89% 52%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 214 89% 52%;
+
+    --radius: 0.5rem;
+
+    /* Video surfaces (reels/live) */
+    --video-background: 0 0% 0%;
+
+    /* Brand colors - Facebook/Shazam inspired */
+    --brand-blue: 214 89% 52%;
+    --brand-light-blue: 211 100% 50%;
+    --brand-gray: 220 14% 96%;
+    --brand-dark: 220 13% 13%;
+    --brand-border: 220 13% 91%;
+    
+    /* Subtle gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(214 89% 52%) 0%, hsl(211 100% 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(214 89% 52%) 100%);
+    --gradient-overlay: linear-gradient(0deg, hsl(0 0% 0% / 0.6) 0%, transparent 50%);
+    
+    /* Subtle shadows */
+    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px hsl(0 0% 0% / 0.07);
+    --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.1);
+    --shadow-button: 0 2px 4px hsl(0 0% 0% / 0.1);
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-spring: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 340 82% 52%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 222 47% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 47% 15%;
+    --sidebar-ring: 340 82% 52%;
+  }
+
+  .dark {
+    --background: 216 15% 7%;
+    --foreground: 210 40% 98%;
+    --card: 216 14% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 216 14% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 214 89% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 216 13% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 216 13% 15%;
+    --muted-foreground: 217 10% 66%;
+    --accent: 214 89% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 216 12% 20%;
+    --input: 216 13% 15%;
+    --ring: 214 89% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  }
+
+  html {
+    background: hsl(var(--background));
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Mobile optimizations */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .gradient-video {
+    background: var(--gradient-video);
+  }
+
+  .gradient-shimmer {
+    background: var(--gradient-shimmer);
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2.5s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .backdrop-blur-glass {
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    background: hsl(var(--background) / 0.7);
+  }
+
+  .backdrop-blur-heavy {
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    background: hsl(var(--background) / 0.85);
+  }
+
+  .glass-card {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: var(--shadow-md);
+  }
+
+  .glow-primary {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glow-accent {
+    box-shadow: var(--shadow-glow-accent);
+  }
+
+  .safe-screen {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .reel-safe-top {
+    padding-top: calc(env(safe-area-inset-top) + 1.5rem);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 40px hsl(var(--primary) / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.6), 0 0 60px hsl(var(--primary) / 0.3);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Suppress ALL native video controls and overlay play buttons (Capacitor/iOS/Android) */
+video[data-reel-video="true"] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  /* Force GPU layer to prevent native UI */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Webkit (Safari, iOS, Chrome) - hide all controls */
+video[data-reel-video="true"]::-webkit-media-controls {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-panel {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-enclosure {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-play-button {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* THE KEY ONE - overlay big play button on iOS/Android WebView */
+video[data-reel-video="true"]::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-volume-slider {
+  display: none !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-mute-button {
+  display: none !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-timeline {
+  display: none !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-current-time-display {
+  display: none !important;
+}
+
+video[data-reel-video="true"]::-webkit-media-controls-time-remaining-display {
+  display: none !important;
+}
+
+/* Firefox */
+video[data-reel-video="true"]::-moz-media-controls {
+  display: none !important;
+}
+
+/* Legacy Edge/IE */
+video[data-reel-video="true"]::-ms-media-controls {
+  display: none !important;
+}
+
+/* Android WebView specific */
+video[data-reel-video="true"]::-webkit-media-controls-overlay-enclosure {
+  display: none !important;
+}

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.finalize_battle(uuid) FROM anon;

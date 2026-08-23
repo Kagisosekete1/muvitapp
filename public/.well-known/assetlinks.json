@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.muvit.app",
+      "sha256_cert_fingerprints": [
+        "60:22:CF:ED:5F:4A:DF:7F:3A:A5:52:1D:50:D2:51:80:20:2A:40:C8:13:2F:6D:C2:96:2E:98:7A:DB:45:24:71"
+      ]
+    }
+  }
+]

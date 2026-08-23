@@ -1,0 +1,27 @@
+{
+  "rewrites": [
+    {
+      "source": "/reel/:id",
+      "destination": "/api/reel/:id"
+    },
+    {
+      "source": "/@:username",
+      "destination": "/api/profile?username=:username"
+    },
+    {
+      "source": "/((?!api/|assets/|icons/|\\.well-known/|favicon|android-chrome|apple-touch-icon).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    }
+  ]
+}
