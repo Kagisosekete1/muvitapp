@@ -32,6 +32,8 @@ const isNative = () => Capacitor.isNativePlatform();
 const getNativePushSubscription = (plugin: any) =>
   plugin?.User?.pushSubscription || plugin?.User?.PushSubscription;
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const getDeviceId = () => {
   const key = 'muvit_push_device_id';
   let id = localStorage.getItem(key);
@@ -46,13 +48,47 @@ const getPlatform = () => (Capacitor.getPlatform?.() || (isNative() ? 'native' :
 
 const getPermissionStatus = async (provider: any) => {
   try {
+    const asyncPermission = await provider?.Notifications?.getPermissionAsync?.();
+    if (typeof asyncPermission === 'boolean') return asyncPermission ? 'granted' : 'denied';
+
     const permission = provider?.Notifications?.permission;
     if (typeof permission === 'boolean') return permission ? 'granted' : 'denied';
+
+    const hasPermission = provider?.Notifications?.hasPermission?.();
+    if (typeof hasPermission === 'boolean') return hasPermission ? 'granted' : 'denied';
+
+    const nativePermission = await provider?.Notifications?.permissionNative?.();
+    if (typeof nativePermission === 'number') {
+      if (nativePermission === 2 || nativePermission === 3 || nativePermission === 4) return 'granted';
+      if (nativePermission === 1) return 'denied';
+    }
+
     const canRequest = await provider?.Notifications?.canRequestPermission?.();
     return canRequest === false ? 'denied' : 'unknown';
   } catch {
     return 'unknown';
   }
+};
+
+const getNativeSubscriptionId = async (plugin: any) => {
+  const pushSubscription = getNativePushSubscription(plugin);
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    try {
+      const id =
+        (await pushSubscription?.getIdAsync?.()) ||
+        pushSubscription?.id;
+      if (id) return id;
+
+      const optedIn = await pushSubscription?.getOptedInAsync?.();
+      if (optedIn === false) {
+        pushSubscription?.optIn?.();
+      }
+    } catch {
+      // OneSignal can need a moment after init/login before the native id exists.
+    }
+    await wait(500);
+  }
+  return null;
 };
 
 export async function getOneSignalPermissionStatus() {
@@ -185,10 +221,12 @@ export async function initOneSignal() {
     if (!plugin) return; // plugin only present in a real device build
     try {
       plugin.initialize?.(ONESIGNAL_APP_ID);
-      const permission = await getPermissionStatus(plugin);
+      let permission = await getPermissionStatus(plugin);
       if (permission !== 'granted') {
         await plugin.Notifications?.requestPermission?.(true);
+        permission = await getPermissionStatus(plugin);
       }
+      getNativePushSubscription(plugin)?.optIn?.();
       plugin.Notifications?.addEventListener?.('click', (event: any) => {
         handleNotificationOpen(event?.notification?.additionalData);
       });
@@ -224,15 +262,14 @@ export async function loginOneSignalUser(userId: string) {
       plugin.login?.(userId);
       const permission = await getPermissionStatus(plugin);
       const pushSubscription = getNativePushSubscription(plugin);
-      const state = await new Promise<any>((resolve) => {
-        try {
-          if (pushSubscription?.id) return resolve(pushSubscription.id);
-          pushSubscription?.getIdAsync?.().then(resolve).catch(() => resolve(null));
-        } catch {
-          resolve(null);
-        }
-      });
-      if (state) await syncPlayerIdWithBackend(state, userId, permission);
+      pushSubscription?.optIn?.();
+      const state = await getNativeSubscriptionId(plugin);
+      if (state) {
+        const syncedPermission = permission === 'unknown'
+          ? await getPermissionStatus(plugin)
+          : permission;
+        await syncPlayerIdWithBackend(state, userId, syncedPermission);
+      }
       pushSubscription?.addEventListener?.('change', (evt: any) => {
         const newId = evt?.current?.id;
         if (newId) {
@@ -303,6 +340,7 @@ export async function requestOneSignalPermissionAndRegister(userId: string) {
     try {
       plugin.initialize?.(ONESIGNAL_APP_ID);
       await plugin.Notifications?.requestPermission?.(true);
+      getNativePushSubscription(plugin)?.optIn?.();
       const status = await getPermissionStatus(plugin);
       await loginOneSignalUser(userId);
       return { supported: true, granted: status === 'granted', status };

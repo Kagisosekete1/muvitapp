@@ -20,7 +20,7 @@ const Privacy = () => {
 
   return (
     <Dialog open={true} onOpenChange={handleBack}>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] max-h-[90vh] bg-card border-border rounded-3xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[680px] max-h-[90vh] bg-card border-border rounded-3xl p-0 overflow-hidden">
         <DialogHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border px-6 py-4">
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full -ml-2">
@@ -32,158 +32,185 @@ const Privacy = () => {
         </DialogHeader>
 
         <ScrollArea className="h-[calc(90vh-80px)]">
-          <div className="px-6 py-6 space-y-6">
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">Privacy Policy for Muv'it</h2>
-              <p className="text-muted-foreground text-sm">Last updated: January 16, 2026</p>
-              <p className="leading-relaxed text-sm">
-                Muv'it ("we", "our", or "us") respects your privacy and is committed to protecting it. This Privacy Policy explains how we collect, use, store, and protect your information when you use the Muv'it mobile application.
+          <div className="px-6 py-6 space-y-6 text-sm leading-relaxed">
+            <section className="space-y-3">
+              <h2 className="text-xl font-bold">Muv'it Privacy Policy</h2>
+              <p className="text-muted-foreground">Effective Date: 24 August 2026</p>
+              <p>
+                Muv'it is a dance-first social platform for creating, sharing, discovering and interacting with dance content.
+                This Privacy Policy explains how Muv'it collects, uses, stores, shares and protects personal information when
+                you use the Muv'it mobile application, website, progressive web app, live features, creator tools and related
+                services.
               </p>
-              <p className="leading-relaxed text-sm">
-                By using Muv'it, you agree to the practices described in this policy.
+              <p>
+                By using Muv'it, you acknowledge that your information will be handled as described in this Privacy Policy.
+                If you do not agree with this policy, you should not use Muv'it.
               </p>
-            </div>
+            </section>
 
-            <div className="space-y-4">
+            <section className="space-y-3">
               <h3 className="text-lg font-semibold">1. Information We Collect</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                We collect the following types of information to provide and improve our services:
-              </p>
-              
-              <div className="space-y-3 ml-4">
-                <div>
-                  <h4 className="font-medium text-sm">a) Personal Information</h4>
-                  <ul className="list-disc list-inside space-y-1 text-foreground/90 text-sm mt-1">
-                    <li>Email address</li>
-                    <li>Username</li>
-                    <li>Profile information you choose to provide</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-sm">b) User Content</h4>
-                  <ul className="list-disc list-inside space-y-1 text-foreground/90 text-sm mt-1">
-                    <li>Videos you upload</li>
-                    <li>Captions, comments, and interactions</li>
-                    <li>Profile images</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-sm">c) Usage Information</h4>
-                  <ul className="list-disc list-inside space-y-1 text-foreground/90 text-sm mt-1">
-                    <li>App activity (likes, views, follows)</li>
-                    <li>Device type and app version</li>
-                    <li>Crash and performance data</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">2. How We Use Your Information</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">We use your information to:</p>
-              <ul className="list-disc list-inside space-y-2 text-foreground/90 text-sm">
-                <li>Create and manage your account</li>
-                <li>Allow you to upload and share dance videos</li>
-                <li>Enable features such as battles, challenges, duets, and cyphers</li>
-                <li>Improve app performance and user experience</li>
-                <li>Ensure platform safety and prevent abuse</li>
+              <p>We collect information needed to operate Muv'it and provide the features you choose to use.</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Account information such as email address, username, display name, password authentication data and profile details.</li>
+                <li>Profile content such as avatar, bio, country, creator details and public profile information.</li>
+                <li>User content such as Muv'z, uploaded videos, thumbnails, captions, hashtags, comments, replies, reposts, live messages and battle entries.</li>
+                <li>Social activity such as likes, follows, followers, saves, shares, mentions, tags, message requests, direct messages and battle activity.</li>
+                <li>Live streaming data such as live title, live status, viewer count, comments, reactions, stream metadata, camera/microphone permission state and session timing.</li>
+                <li>Device and app information such as device type, operating system, app version, browser type, IP address, crash logs, performance information and diagnostics.</li>
+                <li>Approximate or precise location where you allow location access, for features such as nearby Muva'z and local discovery.</li>
+                <li>Notification information such as push tokens, OneSignal subscription IDs, notification preferences, delivery status and unread/read state.</li>
+                <li>Payment, coin, gift, monetization and payout-related information where those features are available.</li>
               </ul>
-            </div>
+            </section>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">3. Data Sharing</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                We do not sell, rent, or trade your personal data to third parties.
-              </p>
-              <p className="leading-relaxed text-foreground/90 text-sm">We may share limited data only:</p>
-              <ul className="list-disc list-inside space-y-2 text-foreground/90 text-sm">
-                <li>To comply with legal obligations</li>
-                <li>To protect users, safety, or platform integrity</li>
-                <li>With trusted service providers who help operate the app (under strict confidentiality)</li>
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">2. Device Permissions</h3>
+              <p>Muv'it asks for permissions only when needed for app features.</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Camera: used to record Muv'z, create profile media and start live streams.</li>
+                <li>Microphone: used to record audio with Muv'z and live streams.</li>
+                <li>Photos and videos: used so you can choose videos, images, thumbnails and profile pictures from your device.</li>
+                <li>Location: used for nearby Muva'z, suggested creators and location-based discovery when you allow it.</li>
+                <li>Notifications: used to send alerts for likes, comments, follows, messages, live streams, battles, uploads, earnings and important Muv'it updates.</li>
               </ul>
-            </div>
+              <p>You can change permissions in your device settings. Some features may not work if a required permission is denied.</p>
+            </section>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">4. Children's Privacy</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                Muv'it is not intended for children under the age of 13.
-              </p>
-              <ul className="list-disc list-inside space-y-2 text-foreground/90 text-sm">
-                <li>Users must be 13 years or older</li>
-                <li>We do not knowingly collect data from children under 13</li>
-                <li>If such data is discovered, it will be deleted immediately</li>
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">3. How We Use Information</h3>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Create, authenticate and secure your account.</li>
+                <li>Show your profile, Muv'z, comments, likes, followers and creator activity.</li>
+                <li>Upload, process, store, display and share videos and thumbnails.</li>
+                <li>Operate live streaming, live comments, reactions and viewer counts.</li>
+                <li>Provide discovery, search, nearby suggestions, trends, challenges and battles.</li>
+                <li>Send in-app notifications and real push notifications through OneSignal where enabled.</li>
+                <li>Support messaging, message requests and user interactions.</li>
+                <li>Improve app speed, reliability, safety, moderation and user experience.</li>
+                <li>Detect abuse, spam, fraud, security risks and violations of Muv'it policies.</li>
+                <li>Support creator monetization, gifts, stars, coins, payouts and eligibility checks where available.</li>
+                <li>Comply with legal obligations and respond to valid legal requests.</li>
               </ul>
-            </div>
+            </section>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">5. Data Security</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                We take reasonable measures to protect your data, including:
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">4. Public Content and Visibility</h3>
+              <p>
+                Muv'it is a social platform. Information you choose to post publicly may be visible to other users, including
+                your username, profile picture, public bio, Muv'z, captions, hashtags, comments, likes, battle entries, live
+                participation and public creator activity. Other users may interact with, share or repost public content using
+                Muv'it features.
               </p>
-              <ul className="list-disc list-inside space-y-2 text-foreground/90 text-sm">
-                <li>Secure servers</li>
-                <li>Encrypted data transmission</li>
-                <li>Limited access to personal information</li>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">5. Notifications and OneSignal</h3>
+              <p>
+                Muv'it uses OneSignal and related device notification services to deliver push notifications. We may store
+                device subscription IDs, push tokens, notification settings and delivery logs so notifications can be sent to
+                the correct user and device.
+              </p>
+              <p>
+                Push notifications may include contextual information, such as who liked, commented, followed, messaged,
+                challenged or mentioned you. Where supported by the device platform, notifications may include the actor's
+                profile picture or a related content preview. You can control notification categories inside Muv'it and through
+                your device settings.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">6. Service Providers</h3>
+              <p>
+                We use trusted service providers to operate Muv'it, including cloud hosting, database, storage, authentication,
+                push notification, analytics, live streaming, payment, moderation and technical infrastructure providers. These
+                providers may process information only as needed to provide their services to Muv'it.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">7. Data Sharing</h3>
+              <p>We do not sell your personal information. We may share information when necessary to:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Provide Muv'it features you use.</li>
+                <li>Display public content and social interactions.</li>
+                <li>Work with service providers under appropriate safeguards.</li>
+                <li>Protect users, Muv'it, our rights and platform safety.</li>
+                <li>Comply with law, legal process or valid requests from authorities.</li>
+                <li>Investigate fraud, abuse, security issues or policy violations.</li>
               </ul>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                However, no system is 100% secure, and we cannot guarantee absolute security.
-              </p>
-            </div>
+            </section>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">6. User Controls & Data Deletion</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">You have the right to:</p>
-              <ul className="list-disc list-inside space-y-2 text-foreground/90 text-sm">
-                <li>Edit your profile information</li>
-                <li>Delete your content</li>
-                <li>Request account deletion</li>
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">8. Data Security</h3>
+              <p>
+                We use reasonable technical and organizational safeguards to protect information, including secure transmission,
+                access controls and protected backend services. No online service can guarantee complete security, but we work
+                to protect Muv'it and respond to security issues responsibly.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">9. Data Retention</h3>
+              <p>
+                We keep information for as long as needed to provide Muv'it, comply with legal obligations, resolve disputes,
+                enforce policies, maintain security and support legitimate business purposes. Public content may remain visible
+                until deleted or removed. Some records may be retained where required by law or for safety and integrity reasons.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">10. Your Choices and Rights</h3>
+              <p>Depending on your location and available features, you may be able to:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Access and update your account profile.</li>
+                <li>Delete Muv'z, comments or other content you posted.</li>
+                <li>Control privacy and notification settings.</li>
+                <li>Block or restrict other users.</li>
+                <li>Request account deletion.</li>
+                <li>Request access, correction or deletion of personal information where required by law.</li>
               </ul>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                Account deletion will permanently remove your personal data, except where retention is required by law.
-              </p>
-            </div>
+            </section>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">7. Third-Party Services</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                Muv'it may use third-party services (such as analytics or cloud storage) that have their own privacy policies. We are not responsible for their practices but ensure they meet reasonable privacy standards.
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">11. Children and Teens</h3>
+              <p>
+                Muv'it is intended for users who meet the minimum age required in their country. Users under 18 may be subject
+                to additional protections, restrictions or parental/guardian requirements. We do not knowingly collect personal
+                information from children where prohibited by law.
               </p>
-            </div>
+            </section>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">8. Changes to This Policy</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated revision date.
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">12. International Use</h3>
+              <p>
+                Muv'it may be accessed from different countries. Your information may be processed in countries other than
+                where you live. Where applicable, we aim to handle personal information in line with relevant privacy laws,
+                including South Africa's Protection of Personal Information Act.
               </p>
-            </div>
+            </section>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">9. Contact Us</h3>
-              <p className="leading-relaxed text-foreground/90 text-sm">
-                If you have any questions or concerns about this Privacy Policy, contact us at:
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">13. Changes to This Policy</h3>
+              <p>
+                We may update this Privacy Policy as Muv'it grows. When we make material changes, we may notify users through
+                the app, website or another appropriate method. The effective date will show when the policy was last updated.
               </p>
-              <div className="space-y-2 text-foreground/90 text-sm">
-                <p>
-                  📧 Email: <a href="mailto:support@muvit.app" className="text-primary hover:underline">support@muvit.app</a>
-                </p>
-                <p>
-                  📧 Email: <a href="mailto:Info@semogroup.com" className="text-primary hover:underline">Info@semogroup.com</a>
-                </p>
-                <p>🌐 App Name: Muv'it</p>
-              </div>
-            </div>
+            </section>
 
-            <div className="pt-4 border-t border-border space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Related policies:
+            <section className="space-y-3">
+              <h3 className="text-lg font-semibold">14. Contact Us</h3>
+              <p>If you have questions about this Privacy Policy or your information, contact Muv'it support.</p>
+              <p>
+                Email: <a href="mailto:support@muvit.app" className="text-primary hover:underline">support@muvit.app</a>
               </p>
-              <a 
-                href="/terms" 
-                className="inline-flex items-center text-primary hover:underline text-sm"
-              >
-                View Terms & Policies →
+              <p>App: Muv'it</p>
+              <p>Country: South Africa</p>
+            </section>
+
+            <div className="pt-4 border-t border-border">
+              <a href="/terms" className="inline-flex items-center text-primary hover:underline">
+                View Terms & Policies
               </a>
             </div>
           </div>

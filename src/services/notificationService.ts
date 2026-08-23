@@ -14,20 +14,31 @@ interface NotificationPayload {
 }
 
 /**
- * Send a push notification to a user
+ * Send a push notification to a user.
+ * Returns false when the Edge Function is unavailable so callers can still
+ * persist an in-app Activity item instead of leaving the user with nothing.
  */
-export const sendPushNotification = async (payload: NotificationPayload): Promise<void> => {
+export const sendPushNotification = async (payload: NotificationPayload): Promise<boolean> => {
   try {
-    if (payload.userId === payload.fromUserId) return;
-    const { error } = await supabase.functions.invoke('send-push-notification', {
+    if (payload.userId === payload.fromUserId) return true;
+    const { data, error } = await supabase.functions.invoke('send-push-notification', {
       body: payload,
     });
 
     if (error) {
       console.error('Failed to send push notification:', error);
+      return false;
     }
+
+    if (data?.error) {
+      console.error('Push notification function returned an error:', data.error);
+      return false;
+    }
+
+    return true;
   } catch (err) {
     console.error('Error invoking push notification function:', err);
+    return false;
   }
 };
 
@@ -69,6 +80,72 @@ const checkNotificationExists = async (
   }
 };
 
+const fallbackMessageFor = (payload: NotificationPayload): string => {
+  switch (payload.type) {
+    case 'like':
+      return 'liked your Reel';
+    case 'comment':
+      return payload.message ? `commented: "${payload.message}"` : 'commented on your Reel';
+    case 'comment_reply':
+      return payload.message ? `replied: "${payload.message}"` : 'replied to your comment';
+    case 'follow':
+      return 'started following you';
+    case 'mention':
+      return payload.message || 'mentioned you';
+    case 'repost':
+      return 'reposted your Reel';
+    case 'new_reel':
+      return payload.message || 'posted a new Muv';
+    case 'live':
+    case 'live_start':
+    case 'live_started':
+      return payload.message || 'is live now';
+    case 'battle_challenge':
+      return payload.message || 'challenged you to a dance battle';
+    case 'battle_win':
+    case 'battle_loss':
+      return payload.message || 'Your battle result is ready';
+    default:
+      return payload.message || 'sent you a notification';
+  }
+};
+
+const insertInAppNotificationFallback = async (payload: NotificationPayload): Promise<void> => {
+  if (payload.userId === payload.fromUserId) return;
+
+  try {
+    const exists = await checkNotificationExists(
+      payload.userId,
+      payload.fromUserId,
+      payload.type,
+      payload.reelId,
+      60_000
+    );
+    if (exists) return;
+
+    const { error } = await supabase.from('notifications').insert({
+      user_id: payload.userId,
+      from_user_id: payload.fromUserId,
+      type: payload.type,
+      reel_id: payload.reelId || null,
+      message: fallbackMessageFor(payload),
+    });
+
+    if (error) {
+      console.error('Failed to create fallback in-app notification:', error);
+    }
+  } catch (err) {
+    console.error('Fallback notification insert failed:', err);
+  }
+};
+
+const sendNotificationWithFallback = async (payload: NotificationPayload): Promise<void> => {
+  const deliveredToBackend = await sendPushNotification(payload);
+  if (!deliveredToBackend) {
+    await insertInAppNotificationFallback(payload);
+  }
+};
+
 /**
  * Send notification when someone likes a reel
  */
@@ -84,7 +161,7 @@ export const sendLikeNotification = async (
   const exists = await checkNotificationExists(reelOwnerId, likerId, 'like', reelId);
   if (exists) return;
 
-  await sendPushNotification({
+  await sendNotificationWithFallback({
     userId: reelOwnerId,
     fromUserId: likerId,
     type: 'like',
@@ -108,7 +185,7 @@ export const sendCommentNotification = async (
   const exists = await checkNotificationExists(reelOwnerId, commenterId, 'comment', reelId, 5000);
   if (exists) return;
 
-  await sendPushNotification({
+  await sendNotificationWithFallback({
     userId: reelOwnerId,
     fromUserId: commenterId,
     type: 'comment',
@@ -133,7 +210,7 @@ export const sendCommentReplyNotification = async (
   const exists = await checkNotificationExists(originalCommenterId, replierId, 'comment_reply', reelId, 5000);
   if (exists) return;
 
-  await sendPushNotification({
+  await sendNotificationWithFallback({
     userId: originalCommenterId,
     fromUserId: replierId,
     type: 'comment_reply',
@@ -154,7 +231,7 @@ export const sendFollowNotification = async (
   const exists = await checkNotificationExists(followedUserId, followerId, 'follow');
   if (exists) return;
 
-  await sendPushNotification({
+  await sendNotificationWithFallback({
     userId: followedUserId,
     fromUserId: followerId,
     type: 'follow',
@@ -172,7 +249,7 @@ export const sendMentionNotification = async (
   const exists = await checkNotificationExists(mentionedUserId, actorId, 'mention', reelId, 10_000);
   if (exists) return;
 
-  await sendPushNotification({
+  await sendNotificationWithFallback({
     userId: mentionedUserId,
     fromUserId: actorId,
     type: 'mention',
@@ -190,7 +267,7 @@ export const sendRepostNotification = async (
   const exists = await checkNotificationExists(reelOwnerId, reposterId, 'repost', reelId, 60_000);
   if (exists) return;
 
-  await sendPushNotification({
+  await sendNotificationWithFallback({
     userId: reelOwnerId,
     fromUserId: reposterId,
     type: 'repost',
@@ -227,7 +304,7 @@ export const sendNewReelNotification = async (
       );
       if (exists) return;
 
-      await sendPushNotification({
+      await sendNotificationWithFallback({
         userId: follower.follower_id,
         fromUserId: creatorId,
         type: 'new_reel',
@@ -253,7 +330,7 @@ export const sendLiveStartNotification = async (
   const exists = await checkNotificationExists(followerId, streamerId, 'live_start', undefined, 60_000);
   if (exists) return;
 
-  await sendPushNotification({
+  await sendNotificationWithFallback({
     userId: followerId,
     fromUserId: streamerId,
     type: 'live_start',
