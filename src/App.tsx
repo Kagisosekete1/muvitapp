@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { UserProvider } from "@/contexts/UserContext";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { VideoQualityProvider } from "@/contexts/VideoQualityContext";
@@ -108,6 +108,7 @@ const AppRoutes = () => {
   return (
     <div className="bg-background min-h-screen">
       <Routes>
+        <Route path="/index.html" element={<Navigate to="/" replace />} />
         <Route path="/" element={<Index />} />
         <Route path="/following" element={
           <ProtectedRoute>
