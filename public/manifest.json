@@ -1,0 +1,54 @@
+{
+  "name": "Muv'it",
+  "short_name": "Muv'it",
+  "description": "Muv'it is a dance-first Muv video platform built for movers, creators, and rhythm lovers.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#1877F2",
+  "categories": ["social", "entertainment", "photo", "video"],
+  "icons": [
+    {
+      "src": "/icons/android/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/android/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Watch Muv'z",
+      "short_name": "Muv'z",
+      "url": "/",
+      "icons": [{ "src": "/icons/android/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Search",
+      "short_name": "Search",
+      "url": "/search",
+      "icons": [{ "src": "/icons/android/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Activity",
+      "short_name": "Activity",
+      "url": "/activity",
+      "icons": [{ "src": "/icons/android/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

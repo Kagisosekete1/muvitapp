@@ -1,4 +1,4 @@
-// Service Worker for Reel'it Push Notifications
+// Service Worker for Muv'it PWA and push notifications
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
@@ -15,7 +15,7 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: data.body || 'You have a new notification',
-    icon: data.icon || '/android-chrome-512x512.png',
+    icon: data.icon || '/muvit-logo.png',
     badge: '/android-chrome-512x512.png',
     vibrate: [200, 100, 200],
     data: data.data || {},
@@ -24,11 +24,11 @@ self.addEventListener('push', (event) => {
       { action: 'dismiss', title: 'Dismiss' }
     ],
     requireInteraction: false,
-    tag: data.tag || 'reelit-notification'
+    tag: data.tag || 'muvit-notification'
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "Reel'it", options)
+    self.registration.showNotification(data.title || "Muv'it", options)
   );
 });
 
@@ -73,10 +73,12 @@ async function syncPendingActions() {
 }
 
 // Cache strategies for offline support
-const CACHE_NAME = 'reelit-v1';
+const CACHE_NAME = 'muvit-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
+  '/manifest.json',
+  '/muvit-logo.png',
   '/android-chrome-512x512.png',
 ];
 
