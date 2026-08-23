@@ -24,7 +24,7 @@ const config: CapacitorConfig = {
     icon: 'public/icons/android/icon-512x512.png',
     adaptiveIcon: {
       foreground: 'public/icons/android/icon-512x512.png',
-      backgroundColor: '#FF6B6B'
+      backgroundColor: '#149EF2'
     },
     // FCM Configuration - place google-services.json in android/app/
     googleServicesFile: 'google-services.json'

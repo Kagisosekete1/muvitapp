@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "brand:icons": "powershell -ExecutionPolicy Bypass -File scripts/generate-brand-icons.ps1",
+    "release:all": "powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
