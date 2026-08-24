@@ -46,6 +46,39 @@ const getDeviceId = () => {
 
 const getPlatform = () => (Capacitor.getPlatform?.() || (isNative() ? 'native' : 'web'));
 
+const waitForDeviceReady = () =>
+  new Promise<void>((resolve) => {
+    if (typeof document === 'undefined') {
+      resolve();
+      return;
+    }
+
+    if ((window as any).cordova || document.readyState === 'complete') {
+      resolve();
+      return;
+    }
+
+    const timeout = window.setTimeout(resolve, 2500);
+    document.addEventListener(
+      'deviceready',
+      () => {
+        window.clearTimeout(timeout);
+        resolve();
+      },
+      { once: true }
+    );
+  });
+
+const getNativePlugin = async () => {
+  await waitForDeviceReady();
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const plugin = window.plugins?.OneSignal;
+    if (plugin) return plugin;
+    await wait(500);
+  }
+  return null;
+};
+
 const getPermissionStatus = async (provider: any) => {
   try {
     const asyncPermission = await provider?.Notifications?.getPermissionAsync?.();
@@ -211,13 +244,29 @@ async function syncPlayerIdWithBackend(playerId: string | null | undefined, user
   }
 }
 
+async function markCurrentDeviceInactive() {
+  try {
+    await (supabase as any)
+      .from('push_subscriptions')
+      .update({
+        is_active: false,
+        permission_status: 'denied',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('device_id', getDeviceId())
+      .eq('provider', 'onesignal');
+  } catch {
+    // best effort only
+  }
+}
+
 /** Initialize the SDK. Safe to call multiple times. */
 export async function initOneSignal() {
   if (typeof window === 'undefined') return;
 
   if (isNative()) {
     // Native (Android/iOS) initialization via onesignal-cordova-plugin
-    const plugin = window.plugins?.OneSignal;
+    const plugin = await getNativePlugin();
     if (!plugin) return; // plugin only present in a real device build
     try {
       plugin.initialize?.(ONESIGNAL_APP_ID);
@@ -256,9 +305,10 @@ export async function loginOneSignalUser(userId: string) {
   if (!userId || typeof window === 'undefined') return;
 
   if (isNative()) {
-    const plugin = window.plugins?.OneSignal;
+    const plugin = await getNativePlugin();
     if (!plugin) return;
     try {
+      plugin.initialize?.(ONESIGNAL_APP_ID);
       plugin.login?.(userId);
       const permission = await getPermissionStatus(plugin);
       const pushSubscription = getNativePushSubscription(plugin);
@@ -269,6 +319,8 @@ export async function loginOneSignalUser(userId: string) {
           ? await getPermissionStatus(plugin)
           : permission;
         await syncPlayerIdWithBackend(state, userId, syncedPermission);
+      } else if (permission === 'denied') {
+        await markCurrentDeviceInactive();
       }
       pushSubscription?.addEventListener?.('change', (evt: any) => {
         const newId = evt?.current?.id;
@@ -335,7 +387,7 @@ export async function requestOneSignalPermissionAndRegister(userId: string) {
   if (!userId || typeof window === 'undefined') return { supported: false, granted: false, status: 'unsupported' };
 
   if (isNative()) {
-    const plugin = window.plugins?.OneSignal;
+    const plugin = await getNativePlugin();
     if (!plugin) return { supported: false, granted: false, status: 'unavailable' };
     try {
       plugin.initialize?.(ONESIGNAL_APP_ID);
@@ -343,6 +395,7 @@ export async function requestOneSignalPermissionAndRegister(userId: string) {
       getNativePushSubscription(plugin)?.optIn?.();
       const status = await getPermissionStatus(plugin);
       await loginOneSignalUser(userId);
+      if (status === 'denied') await markCurrentDeviceInactive();
       return { supported: true, granted: status === 'granted', status };
     } catch (err) {
       console.warn('[OneSignal] native permission request failed', err);
