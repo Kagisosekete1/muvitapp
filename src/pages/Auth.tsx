@@ -22,6 +22,8 @@ const Auth = () => {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
+  const [showConfirmHelp, setShowConfirmHelp] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -45,6 +47,7 @@ const Auth = () => {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    setShowConfirmHelp(false);
     setLoading(true);
 
     try {
@@ -116,7 +119,22 @@ const Auth = () => {
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          const message = error.message || '';
+          if (
+            message.toLowerCase().includes('invalid login credentials') ||
+            message.toLowerCase().includes('email not confirmed')
+          ) {
+            setShowConfirmHelp(true);
+            toast({
+              title: "Could not sign in",
+              description: "Confirm your email first, then try signing in again.",
+              variant: "destructive",
+            });
+            return;
+          }
+          throw error;
+        }
 
         toast({
           title: "Welcome back!",
@@ -132,6 +150,38 @@ const Auth = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const resendConfirmation = async () => {
+    const result = authSchema.shape.email.safeParse(email);
+    if (!result.success) {
+      setErrors({ email: 'Enter your email above first' });
+      return;
+    }
+
+    setResendingConfirmation(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: getAuthRedirectUrl('/auth/callback'),
+      },
+    });
+    setResendingConfirmation(false);
+
+    if (error) {
+      toast({
+        title: 'Could not resend confirmation',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Confirmation email sent',
+      description: "Open the new email and confirm your Muv'it account.",
+    });
   };
 
   return (
@@ -245,6 +295,23 @@ const Auth = () => {
               {loading ? 'Please wait...' : (isSignUp ? 'Sign Up' : 'Sign In')}
             </Button>
           </form>
+
+          {!isSignUp && showConfirmHelp && (
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center space-y-3">
+              <p className="text-sm text-foreground">
+                Your account may still need email confirmation. Open the confirmation email, then sign in again.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-xl"
+                onClick={resendConfirmation}
+                disabled={resendingConfirmation}
+              >
+                {resendingConfirmation ? 'Sending...' : 'Resend confirmation email'}
+              </Button>
+            </div>
+          )}
 
           {!isSignUp && (
             <div className="text-center -mt-2">
