@@ -31,6 +31,14 @@ npx supabase link --project-ref wvtbqmdizkpcikniysgu
 npx supabase db push
 ```
 
+If the CLI is not working, open Supabase SQL Editor and run:
+
+```text
+docs/MUVIT_SUPABASE_CORE_SCHEMA.sql
+```
+
+Before running it, replace `CHANGE_ME_NOTIFICATION_WEBHOOK_SECRET` with the same `NOTIFICATION_WEBHOOK_SECRET` you set for Edge Functions.
+
 ## 4. Set Edge Function secrets
 
 ```powershell
