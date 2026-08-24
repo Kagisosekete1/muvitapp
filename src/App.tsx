@@ -63,12 +63,14 @@ const AppRoutes = () => {
     return () => window.removeEventListener('onesignal:navigate', onNavigate);
   }, [navigate]);
 
-  // Supabase email confirmation / recovery deep links from the native app.
+  // Supabase email confirmation / recovery deep links from web and the native app.
   useEffect(() => {
     const handleAuthUrl = async (rawUrl: string) => {
       try {
         const parsed = new URL(rawUrl);
-        if (parsed.protocol !== 'muvit:' || parsed.hostname !== 'auth') return;
+        const isNativeAuthUrl = parsed.protocol === 'muvit:' && parsed.hostname === 'auth';
+        const isWebAuthUrl = parsed.pathname === '/auth/callback' || parsed.pathname === '/auth/reset-password';
+        if (!isNativeAuthUrl && !isWebAuthUrl) return;
 
         const hashParams = new URLSearchParams(parsed.hash.replace(/^#/, ''));
         const code = parsed.searchParams.get('code') || hashParams.get('code');
@@ -87,12 +89,16 @@ const AppRoutes = () => {
           if (error) console.warn('[auth] token session restore failed', error);
         }
 
+        const flowType = parsed.searchParams.get('type') || hashParams.get('type');
         const path = parsed.pathname || '/callback';
-        navigate(path.includes('reset-password') ? '/reset-password' : '/', { replace: true });
+        const isRecovery = path.includes('reset-password') || flowType === 'recovery';
+        navigate(isRecovery ? '/reset-password' : '/', { replace: true });
       } catch (error) {
         console.warn('[auth] failed to handle deep link', error);
       }
     };
+
+    handleAuthUrl(window.location.href);
 
     CapacitorApp.getLaunchUrl().then((launch) => {
       if (launch?.url) handleAuthUrl(launch.url);

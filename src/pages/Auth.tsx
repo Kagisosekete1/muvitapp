@@ -11,7 +11,8 @@ import muvitLogo from '@/assets/muvit-logo.png';
 
 const getAuthRedirectUrl = (path = '/auth/callback') => {
   const isNative = window.location.protocol === 'capacitor:';
-  return isNative ? `muvit://${path.replace(/^\//, '')}` : `${window.location.origin}${path}`;
+  const publicOrigin = import.meta.env.VITE_PUBLIC_APP_URL || 'https://muvit.site';
+  return isNative ? `muvit://${path.replace(/^\//, '')}` : `${publicOrigin}${path}`;
 };
 
 const Auth = () => {
@@ -105,8 +106,8 @@ const Auth = () => {
           }
         } else {
           toast({
-            title: "Account created!",
-            description: "Welcome to Muv'it!",
+            title: "Account created",
+            description: "Check your email to confirm your Muv'it account.",
           });
         }
       } else {
