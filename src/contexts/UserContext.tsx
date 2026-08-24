@@ -227,7 +227,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             following_id: targetUserId,
           });
 
-        if (error) return;
+        if (error && error.code !== '23505') {
+          console.error('Error following user:', error);
+          return;
+        }
 
         setCurrentUser(prev => prev ? {
           ...prev,

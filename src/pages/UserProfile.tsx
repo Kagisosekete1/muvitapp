@@ -291,15 +291,27 @@ const UserProfile = () => {
       .maybeSingle();
 
     if (!existing) {
-      await supabase
+      const { error } = await supabase
         .from('follows')
         .insert({
           follower_id: authUser.id,
           following_id: user.user_id,
         });
 
+      if (error && error.code !== '23505') {
+        setIsFollowing(false);
+        setFollowingIds(new Set());
+        setUser(prev => prev ? {
+          ...prev,
+          followers_count: Math.max(0, (prev.followers_count || 0) - 1),
+        } : prev);
+        console.error('Error following user:', error);
+        toast({ title: 'Could not follow', description: error.message, variant: 'destructive' });
+        return;
+      }
+
       // Send in-app + push via backend (prevents duplicates)
-      void sendFollowNotification(user.user_id, authUser.id);
+      if (!error) void sendFollowNotification(user.user_id, authUser.id);
     }
 
     toast({ title: 'Following', description: `You are now following @${user.username}` });
@@ -318,11 +330,23 @@ const UserProfile = () => {
       followers_count: Math.max(0, (prev.followers_count || 0) - 1),
     } : prev);
 
-    await supabase
+    const { error } = await supabase
       .from('follows')
       .delete()
       .eq('follower_id', authUser.id)
       .eq('following_id', user.user_id);
+
+    if (error) {
+      setIsFollowing(true);
+      setFollowingIds(new Set([user.user_id]));
+      setUser(prev => prev ? {
+        ...prev,
+        followers_count: (prev.followers_count || 0) + 1,
+      } : prev);
+      console.error('Error unfollowing user:', error);
+      toast({ title: 'Could not unfollow', description: error.message, variant: 'destructive' });
+      return;
+    }
 
     toast({ title: 'Unfollowed', description: `You unfollowed @${user.username}` });
   };

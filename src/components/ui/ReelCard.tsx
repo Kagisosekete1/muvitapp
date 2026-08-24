@@ -670,12 +670,16 @@ const ReelCard: React.FC<ReelCardProps> = ({
       setLikeCount(nextCount);
 
       if (authUser) {
-        await supabase.from('likes').insert({ user_id: authUser.id, reel_id: reel.id });
-        await supabase.from('reels').update({ likes_count: nextCount }).eq('id', reel.id);
-        
-        // Create the in-app notification and OneSignal push in one place.
-        if (reel.user.id !== authUser.id) {
-          sendLikeNotification(reel.user.id, authUser.id, reel.id);
+        const { error } = await supabase.from('likes').insert({ user_id: authUser.id, reel_id: reel.id });
+        if (error && error.code !== '23505') {
+          setIsLiked(false);
+          setLikeCount(likeCount);
+          console.error('Error liking Muv:', error);
+          return;
+        }
+
+        if (!error && reel.user.id !== authUser.id) {
+          void sendLikeNotification(reel.user.id, authUser.id, reel.id);
         }
       }
     }
@@ -792,12 +796,20 @@ const ReelCard: React.FC<ReelCardProps> = ({
     const newIsSaved = !isSaved;
     setIsSaved(newIsSaved);
 
-    if (newIsSaved) {
-      await supabase.from('saved_reels').insert({ user_id: authUser.id, reel_id: reel.id });
-      toast({ title: 'Saved', description: "Muv saved to your collection" });
-    } else {
-      await supabase.from('saved_reels').delete().eq('user_id', authUser.id).eq('reel_id', reel.id);
-      toast({ title: 'Removed', description: "Muv removed from saved" });
+    try {
+      if (newIsSaved) {
+        const { error } = await supabase.from('saved_reels').insert({ user_id: authUser.id, reel_id: reel.id });
+        if (error && error.code !== '23505') throw error;
+        toast({ title: 'Saved', description: "Muv saved to your collection" });
+      } else {
+        const { error } = await supabase.from('saved_reels').delete().eq('user_id', authUser.id).eq('reel_id', reel.id);
+        if (error) throw error;
+        toast({ title: 'Removed', description: "Muv removed from saved" });
+      }
+    } catch (error) {
+      setIsSaved(!newIsSaved);
+      console.error('Error saving Muv:', error);
+      toast({ title: 'Could not update saved Muv', variant: 'destructive' });
     }
   };
 
@@ -821,15 +833,29 @@ const ReelCard: React.FC<ReelCardProps> = ({
       return;
     }
     if (isReposted) {
-      await supabase.from('reposts').delete().eq('user_id', authUser.id).eq('reel_id', reel.id);
       setIsReposted(false);
       setRepostCount(prev => Math.max(0, prev - 1));
+      const { error } = await supabase.from('reposts').delete().eq('user_id', authUser.id).eq('reel_id', reel.id);
+      if (error) {
+        setIsReposted(true);
+        setRepostCount(prev => prev + 1);
+        console.error('Error removing repost:', error);
+        toast({ title: 'Could not remove repost', variant: 'destructive' });
+        return;
+      }
       toast({ title: 'Repost removed' });
     } else {
-      await supabase.from('reposts').insert({ user_id: authUser.id, reel_id: reel.id });
       setIsReposted(true);
       setRepostCount(prev => prev + 1);
-      if (reel.user.id !== authUser.id) {
+      const { error } = await supabase.from('reposts').insert({ user_id: authUser.id, reel_id: reel.id });
+      if (error && error.code !== '23505') {
+        setIsReposted(false);
+        setRepostCount(prev => Math.max(0, prev - 1));
+        console.error('Error reposting Muv:', error);
+        toast({ title: 'Could not repost', variant: 'destructive' });
+        return;
+      }
+      if (!error && reel.user.id !== authUser.id) {
         void sendRepostNotification(reel.user.id, authUser.id, reel.id);
       }
       toast({ title: 'Reposted!' });
