@@ -3,9 +3,15 @@ ALTER TABLE public.notifications
   ADD COLUMN IF NOT EXISTS deep_link text,
   ADD COLUMN IF NOT EXISTS actor_avatar_url text;
 
-CREATE UNIQUE INDEX IF NOT EXISTS notifications_event_key_uidx
-  ON public.notifications(event_key)
-  WHERE event_key IS NOT NULL;
+DELETE FROM public.notifications n
+USING public.notifications newer
+WHERE n.event_key IS NOT NULL
+  AND newer.event_key = n.event_key
+  AND newer.created_at > n.created_at;
+
+DROP INDEX IF EXISTS public.notifications_event_key_uidx;
+CREATE UNIQUE INDEX notifications_event_key_uidx
+  ON public.notifications(event_key);
 
 ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
 ALTER TABLE public.notifications

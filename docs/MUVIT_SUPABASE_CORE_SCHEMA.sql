@@ -397,7 +397,14 @@ create policy "Users can view their own notifications" on public.notifications f
 create policy "Users can insert notifications for others" on public.notifications for insert with check (auth.uid() = from_user_id);
 create policy "Users can update their own notifications" on public.notifications for update using (auth.uid() = user_id);
 create policy "Users can delete their own notifications" on public.notifications for delete using (auth.uid() = user_id);
-create unique index if not exists notifications_event_key_uidx on public.notifications(event_key) where event_key is not null;
+delete from public.notifications n
+using public.notifications newer
+where n.event_key is not null
+  and newer.event_key = n.event_key
+  and newer.created_at > n.created_at;
+
+drop index if exists public.notifications_event_key_uidx;
+create unique index notifications_event_key_uidx on public.notifications(event_key);
 create index if not exists notifications_user_unread_idx on public.notifications(user_id, is_read, created_at desc);
 create index if not exists notifications_reel_idx on public.notifications(reel_id);
 create index if not exists notifications_comment_idx on public.notifications(comment_id);

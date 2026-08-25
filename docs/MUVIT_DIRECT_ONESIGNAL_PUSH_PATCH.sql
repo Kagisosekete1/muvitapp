@@ -23,6 +23,19 @@ set
   updated_at = now()
 where id = true;
 
+alter table public.notifications
+  add column if not exists event_key text;
+
+delete from public.notifications n
+using public.notifications newer
+where n.event_key is not null
+  and newer.event_key = n.event_key
+  and newer.created_at > n.created_at;
+
+drop index if exists public.notifications_event_key_uidx;
+create unique index notifications_event_key_uidx
+  on public.notifications(event_key);
+
 create or replace function public.muvit_notification_pref_field(_type text)
 returns text
 language sql

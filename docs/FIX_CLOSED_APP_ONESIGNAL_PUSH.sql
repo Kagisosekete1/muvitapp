@@ -74,9 +74,15 @@ alter table public.notifications
   add column if not exists delivery_attempts integer not null default 0,
   add column if not exists provider_response jsonb;
 
-create unique index if not exists notifications_event_key_uidx
-  on public.notifications(event_key)
-  where event_key is not null;
+delete from public.notifications n
+using public.notifications newer
+where n.event_key is not null
+  and newer.event_key = n.event_key
+  and newer.created_at > n.created_at;
+
+drop index if exists public.notifications_event_key_uidx;
+create unique index notifications_event_key_uidx
+  on public.notifications(event_key);
 
 alter table public.notifications drop constraint if exists notifications_type_check;
 alter table public.notifications
