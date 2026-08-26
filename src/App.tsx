@@ -11,6 +11,7 @@ import { VideoQualityProvider } from "@/contexts/VideoQualityContext";
 import { DebugProvider } from "@/contexts/DebugContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { useNativeBackHandler } from "@/hooks/useNativeBackHandler";
 import { useRouteMemory } from "@/hooks/useRouteMemory";
 import Index from "./pages/Index";
@@ -209,6 +210,7 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <OfflineIndicator />
+                <PwaInstallPrompt />
                 <BrowserRouter>
                   <AppRoutes />
                 </BrowserRouter>
