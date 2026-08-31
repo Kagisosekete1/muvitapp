@@ -124,6 +124,19 @@ const getNativeSubscriptionId = async (plugin: any) => {
   return null;
 };
 
+const getNativeSubscriptionStatus = async (plugin: any) => {
+  const permission = await getPermissionStatus(plugin);
+  const pushSubscription = getNativePushSubscription(plugin);
+  try {
+    const optedIn = await pushSubscription?.getOptedInAsync?.();
+    const id = (await pushSubscription?.getIdAsync?.()) || pushSubscription?.id;
+    if (id && optedIn !== false && permission !== 'denied') return 'granted';
+  } catch {
+    // Fall back to the raw OS permission state below.
+  }
+  return permission;
+};
+
 export async function getOneSignalPermissionStatus() {
   if (typeof window === 'undefined') return 'unsupported';
 
@@ -310,13 +323,13 @@ export async function loginOneSignalUser(userId: string) {
     try {
       plugin.initialize?.(ONESIGNAL_APP_ID);
       plugin.login?.(userId);
-      const permission = await getPermissionStatus(plugin);
+      const permission = await getNativeSubscriptionStatus(plugin);
       const pushSubscription = getNativePushSubscription(plugin);
       pushSubscription?.optIn?.();
       const state = await getNativeSubscriptionId(plugin);
       if (state) {
         const syncedPermission = permission === 'unknown'
-          ? await getPermissionStatus(plugin)
+          ? await getNativeSubscriptionStatus(plugin)
           : permission;
         await syncPlayerIdWithBackend(state, userId, syncedPermission);
       } else if (permission === 'denied') {
@@ -325,7 +338,7 @@ export async function loginOneSignalUser(userId: string) {
       pushSubscription?.addEventListener?.('change', (evt: any) => {
         const newId = evt?.current?.id;
         if (newId) {
-          getPermissionStatus(plugin).then((status) => syncPlayerIdWithBackend(newId, userId, status));
+          getNativeSubscriptionStatus(plugin).then((status) => syncPlayerIdWithBackend(newId, userId, status));
         }
       });
     } catch (err) {
@@ -393,7 +406,7 @@ export async function requestOneSignalPermissionAndRegister(userId: string) {
       plugin.initialize?.(ONESIGNAL_APP_ID);
       await plugin.Notifications?.requestPermission?.(true);
       getNativePushSubscription(plugin)?.optIn?.();
-      const status = await getPermissionStatus(plugin);
+      const status = await getNativeSubscriptionStatus(plugin);
       await loginOneSignalUser(userId);
       if (status === 'denied') await markCurrentDeviceInactive();
       return { supported: true, granted: status === 'granted', status };

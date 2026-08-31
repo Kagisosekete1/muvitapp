@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { consumePreviousRoute, getCurrentRoutePath } from '@/hooks/useRouteMemory';
 
 /**
  * Hook that handles hardware back button on native platforms.
@@ -16,12 +17,23 @@ export const useNativeBackHandler = () => {
     if (!Capacitor.isNativePlatform()) return;
 
     const handleBackButton = () => {
-      // If we can go back in history, do so
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        // At root - minimize/exit app
+      const currentRoute = getCurrentRoutePath(location);
+      const previousRoute = consumePreviousRoute(currentRoute);
+
+      if (previousRoute && previousRoute !== currentRoute) {
+        navigate(previousRoute, { replace: true });
+        return;
+      }
+
+      if (location.pathname !== '/') {
+        navigate('/', { replace: true });
+        return;
+      }
+
+      try {
         App.minimizeApp();
+      } catch {
+        navigate('/', { replace: true });
       }
     };
 

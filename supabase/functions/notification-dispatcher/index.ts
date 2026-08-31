@@ -275,13 +275,32 @@ serve(async (req) => {
         continue;
       }
 
-      if (!row?.id) {
-        results.push({ success: true, duplicate: true, eventKey });
-        continue;
+      let notificationId = row?.id as string | undefined;
+      if (!notificationId) {
+        const { data: existing, error: existingError } = await supabase
+          .from("notifications")
+          .select("id, push_status")
+          .eq("event_key", eventKey)
+          .maybeSingle();
+
+        if (existingError || !existing?.id) {
+          results.push({ success: false, error: "existing-notification-not-found", eventKey });
+          continue;
+        }
+
+        notificationId = existing.id;
+        if (["sent", "preference_skipped", "disabled"].includes(existing.push_status || "")) {
+          results.push({ success: true, duplicate: true, notificationId, eventKey });
+          continue;
+        }
       }
 
       if (pushDisabled) {
-        results.push({ success: true, notificationId: row.id, skipped: "preference-disabled" });
+        await supabase
+          .from("notifications")
+          .update({ push_status: "preference_skipped" })
+          .eq("id", notificationId);
+        results.push({ success: true, notificationId, skipped: "preference-disabled" });
         continue;
       }
 
@@ -314,7 +333,7 @@ serve(async (req) => {
           small_icon: "ic_stat_onesignal_default",
           data: {
             type: payload.type,
-            notification_id: row.id,
+            notification_id: notificationId,
             from_user_id: payload.fromUserId,
             actor_username: actor?.username || null,
             reel_id: payload.reelId || null,
@@ -363,9 +382,9 @@ serve(async (req) => {
           delivery_attempts: 1,
           provider_response: providerResponse,
         })
-        .eq("id", row.id);
+        .eq("id", notificationId);
 
-      results.push({ success: pushStatus === "sent", notificationId: row.id, pushStatus, pushError });
+      results.push({ success: pushStatus === "sent", notificationId, pushStatus, pushError });
     }
 
     return json({ success: true, results });

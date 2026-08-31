@@ -5,8 +5,13 @@ const LAST_ROUTE_KEY = 'muvit_last_route';
 const ROUTE_HISTORY_KEY = 'muvit_route_history';
 const MAX_HISTORY_LENGTH = 50;
 
-// Routes that should not be remembered (auth, etc.)
+// Routes that should not be restored on app launch.
 const EXCLUDED_ROUTES = ['/auth', '/terms', '/privacy', '/about'];
+
+export const getCurrentRoutePath = (location: { pathname: string; search?: string; hash?: string }) =>
+  `${location.pathname}${location.search || ''}${location.hash || ''}`;
+
+const normalizeRoute = (route: string) => route.split('?')[0].split('#')[0];
 
 /**
  * Hook that persists the current route to localStorage and restores on app launch.
@@ -27,7 +32,7 @@ export const useRouteMemory = () => {
     const lastRoute = localStorage.getItem(LAST_ROUTE_KEY);
     
     // Only restore if we're at root, have a saved route, and it's not home
-    if (lastRoute && lastRoute !== '/' && location.pathname === '/' && !EXCLUDED_ROUTES.includes(lastRoute)) {
+    if (lastRoute && lastRoute !== '/' && location.pathname === '/' && !EXCLUDED_ROUTES.includes(normalizeRoute(lastRoute))) {
       // Check if this is a fresh app load (not internal navigation)
       const isInternalNav = sessionStorage.getItem('muvit_app_initialized');
       if (!isInternalNav) {
@@ -42,13 +47,13 @@ export const useRouteMemory = () => {
 
   // Save current route whenever it changes and maintain history
   useEffect(() => {
-    const currentPath = location.pathname;
+    const currentPath = getCurrentRoutePath(location);
     
     // Skip if this is the same path as before
     if (lastPathRef.current === currentPath) return;
     lastPathRef.current = currentPath;
 
-    if (!EXCLUDED_ROUTES.includes(currentPath)) {
+    if (!EXCLUDED_ROUTES.includes(normalizeRoute(currentPath))) {
       localStorage.setItem(LAST_ROUTE_KEY, currentPath);
       
       // Update route history for back navigation
@@ -67,7 +72,7 @@ export const useRouteMemory = () => {
         localStorage.setItem(ROUTE_HISTORY_KEY, JSON.stringify(history));
       }
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.search, location.hash]);
 };
 
 /**
@@ -97,6 +102,25 @@ export const popRouteFromHistory = (): void => {
   if (history.length > 0) {
     history.pop();
     localStorage.setItem(ROUTE_HISTORY_KEY, JSON.stringify(history));
+  }
+};
+
+export const consumePreviousRoute = (currentRoute?: string): string | null => {
+  const historyStr = localStorage.getItem(ROUTE_HISTORY_KEY);
+  if (!historyStr) return null;
+
+  try {
+    const history: string[] = JSON.parse(historyStr);
+    while (history.length > 0 && currentRoute && history[history.length - 1] === currentRoute) {
+      history.pop();
+    }
+
+    const previous = history.pop() || null;
+    localStorage.setItem(ROUTE_HISTORY_KEY, JSON.stringify(history));
+    return previous;
+  } catch {
+    localStorage.removeItem(ROUTE_HISTORY_KEY);
+    return null;
   }
 };
 

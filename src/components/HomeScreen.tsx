@@ -11,6 +11,7 @@ import { useVideoQuality } from '@/contexts/VideoQualityContext';
 import AppRatingPrompt from './AppRatingPrompt';
 
 const PAGE_SIZE = 10;
+const HOME_REELS_CACHE_KEY = 'muvit-home-reels-cache';
 
 interface HomeScreenProps {
   setScreen: (screen: Screen | 'following', payload?: any) => void;
@@ -74,6 +75,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setScreen, currentScreen, onReg
   
   // Warm the first reel immediately for instant playback
   useFirstReelPreloader(reels);
+
+  useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem(HOME_REELS_CACHE_KEY);
+      if (!cached) return;
+      const cachedReels = JSON.parse(cached) as ReelData[];
+      if (Array.isArray(cachedReels) && cachedReels.length > 0) {
+        setReels(cachedReels);
+        setLoading(false);
+      }
+    } catch {
+      sessionStorage.removeItem(HOME_REELS_CACHE_KEY);
+    }
+  }, []);
 
   // Register pause callback with parent
   useEffect(() => {
@@ -168,28 +183,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setScreen, currentScreen, onReg
           .select('id, user_id, username, display_name, avatar_url, verified')
           .in('user_id', userIds);
 
-        // Fetch live follow counts for all profiles
-        const profileIds = profiles?.map(p => p.id) || [];
-        const [{ data: followersData }, { data: followingData }] = await Promise.all([
-          supabase.from('follows').select('following_id').in('following_id', profileIds),
-          supabase.from('follows').select('follower_id').in('follower_id', profileIds),
-        ]);
-
-        const followersCountMap = new Map<string, number>();
-        const followingCountMap = new Map<string, number>();
-
-        (followersData || []).forEach(f => {
-          followersCountMap.set(f.following_id, (followersCountMap.get(f.following_id) || 0) + 1);
-        });
-        (followingData || []).forEach(f => {
-          followingCountMap.set(f.follower_id, (followingCountMap.get(f.follower_id) || 0) + 1);
-        });
-
-        const profileMap = new Map(profiles?.map(p => [p.user_id, {
-          ...p,
-          followers_count: followersCountMap.get(p.id) || 0,
-          following_count: followingCountMap.get(p.id) || 0,
-        }]) || []);
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
         
         const reelsWithProfiles = reelsData.map(r => ({
           ...r,
@@ -200,6 +194,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setScreen, currentScreen, onReg
           // Always shuffle on initial load/refresh for fresh experience
           const shuffled = [...reelsWithProfiles].sort(() => Math.random() - 0.5);
           setReels(shuffled);
+          try {
+            sessionStorage.setItem(HOME_REELS_CACHE_KEY, JSON.stringify(shuffled));
+          } catch {
+            // Cache is a speed boost only.
+          }
         } else {
           // Shuffle new batch and append for infinite scroll
           const shuffledNew = [...reelsWithProfiles].sort(() => Math.random() - 0.5);
@@ -350,7 +349,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ setScreen, currentScreen, onReg
   }, [currentScreen, activeReelIndex, goToReel]);
 
   if (loading && displayedReels.length === 0) {
-    return null;
+    return (
+      <div className="h-full flex items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/25 border-t-primary" />
+      </div>
+    );
   }
 
   return (
