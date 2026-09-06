@@ -7,6 +7,7 @@ import { Mail, Lock, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { authSchema, signUpSchema } from '@/lib/validations';
+import { getSupabaseUserMessage, isSupabaseServiceRestricted, logSupabaseError } from '@/lib/supabaseErrors';
 import muvitLogo from '@/assets/muvit-logo.png';
 
 const getAuthRedirectUrl = (path = '/auth/callback') => {
@@ -142,9 +143,10 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
+      logSupabaseError(isSignUp ? 'auth.signUp' : 'auth.signIn', error);
       toast({
-        title: "Error",
-        description: error.message || "An error occurred",
+        title: isSupabaseServiceRestricted(error) ? "Service temporarily paused" : "Error",
+        description: getSupabaseUserMessage(error, "An error occurred"),
         variant: "destructive",
       });
     } finally {
@@ -170,9 +172,10 @@ const Auth = () => {
     setResendingConfirmation(false);
 
     if (error) {
+      logSupabaseError('auth.resendConfirmation', error);
       toast({
         title: 'Could not resend confirmation',
-        description: error.message,
+        description: getSupabaseUserMessage(error),
         variant: 'destructive',
       });
       return;
@@ -331,7 +334,8 @@ const Auth = () => {
                   });
                   setLoading(false);
                   if (error) {
-                    toast({ title: 'Could not send email', description: error.message, variant: 'destructive' });
+                    logSupabaseError('auth.resetPassword', error);
+                    toast({ title: 'Could not send email', description: getSupabaseUserMessage(error), variant: 'destructive' });
                   } else {
                     toast({ title: 'Check your email', description: 'We sent a password reset link.' });
                   }
