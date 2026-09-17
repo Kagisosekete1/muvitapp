@@ -41,7 +41,7 @@ const AddFriendsFromContacts: React.FC<AddFriendsFromContactsProps> = ({ isOpen,
     const shareData = {
       title: "Join me on Muv'it!",
       text: "Hey! I'm using Muv'it to share and discover amazing dance videos. Join me!",
-      url: 'https://letsreelit.lovable.app',
+      url: 'https://muvit.site/',
     };
 
     try {

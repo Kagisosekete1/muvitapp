@@ -41,6 +41,29 @@ Save-Png 1024 "public\icons\ios\icon-1024x1024.png"
 Save-Png 512 "public\android-chrome-512x512.png"
 Save-Png 32 "public\favicon.png"
 
+# Create a standards-compliant ICO containing the official 32x32 PNG.
+$faviconPngPath = Join-Path $root "public\favicon.png"
+$faviconIcoPath = Join-Path $root "public\favicon.ico"
+$pngBytes = [System.IO.File]::ReadAllBytes($faviconPngPath)
+$icoStream = New-Object System.IO.MemoryStream
+$icoWriter = New-Object System.IO.BinaryWriter($icoStream)
+$icoWriter.Write([UInt16]0)
+$icoWriter.Write([UInt16]1)
+$icoWriter.Write([UInt16]1)
+$icoWriter.Write([Byte]32)
+$icoWriter.Write([Byte]32)
+$icoWriter.Write([Byte]0)
+$icoWriter.Write([Byte]0)
+$icoWriter.Write([UInt16]1)
+$icoWriter.Write([UInt16]32)
+$icoWriter.Write([UInt32]$pngBytes.Length)
+$icoWriter.Write([UInt32]22)
+$icoWriter.Write($pngBytes)
+$icoWriter.Flush()
+[System.IO.File]::WriteAllBytes($faviconIcoPath, $icoStream.ToArray())
+$icoWriter.Dispose()
+$icoStream.Dispose()
+
 $source.Dispose()
 
 Write-Host "Muv'it brand icons generated from public\muvit-logo.png"
