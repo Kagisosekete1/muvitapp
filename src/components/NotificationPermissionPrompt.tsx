@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Bell, ShieldCheck, Heart, MessageCircle } from 'lucide-react';
-import { usePushNotifications } from '@/services/pushNotifications';
+import { useUser } from '@/contexts/UserContext';
+import { getOneSignalPermissionStatus, requestOneSignalPermissionAndRegister } from '@/services/oneSignalService';
 
 const PROMPT_KEY = 'reelit_notif_permission_prompted_v1';
 
@@ -12,8 +13,11 @@ type Props = {
 };
 
 const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
-  const { isSupported, isEnabled, requestPermission } = usePushNotifications();
+  const { authUser } = useUser();
   const [open, setOpen] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState('unknown');
+  const isSupported = permissionStatus !== 'unsupported' && permissionStatus !== 'unavailable';
+  const isEnabled = permissionStatus === 'granted';
 
   const hasPrompted = useMemo(() => {
     try {
@@ -24,7 +28,12 @@ const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
   }, []);
 
   useEffect(() => {
+    void getOneSignalPermissionStatus().then(setPermissionStatus);
+  }, []);
+
+  useEffect(() => {
     if (!enabled) return;
+    if (!authUser) return;
     if (!isSupported) return;
     if (isEnabled) return;
     if (hasPrompted) return;
@@ -32,7 +41,7 @@ const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
     // Slight delay to avoid jank on first render
     const t = setTimeout(() => setOpen(true), 700);
     return () => clearTimeout(t);
-  }, [enabled, isSupported, isEnabled, hasPrompted]);
+  }, [authUser, enabled, isSupported, isEnabled, hasPrompted]);
 
   const markPrompted = () => {
     try {
@@ -48,12 +57,11 @@ const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
   };
 
   const handleEnable = async () => {
-    const ok = await requestPermission();
+    if (!authUser) return;
+    const result = await requestOneSignalPermissionAndRegister(authUser.id);
+    setPermissionStatus(result.status);
     markPrompted();
     setOpen(false);
-
-    // If permission wasn't granted, we still stop prompting.
-    void ok;
   };
 
   if (!enabled || !isSupported || isEnabled || hasPrompted) return null;

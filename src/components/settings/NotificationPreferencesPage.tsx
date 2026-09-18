@@ -149,31 +149,21 @@ const NotificationPreferencesPage: React.FC = () => {
         }
         setPermissionDenied(false);
       } else {
-      if (!('Notification' in window)) {
-        toast({
-          title: "Use the Muv'it app",
-          description: "Real push alerts are handled by the installed Muv'it app with OneSignal.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (Notification.permission === 'denied') {
-        setPermissionDenied(true);
-        toast({
-          title: "Permission blocked",
-          description: "Please enable notifications in your device settings.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        if (permission === 'denied') setPermissionDenied(true);
-        return;
-      }
-      setPermissionDenied(false);
+        // OneSignal must make the permission request. Calling the browser API
+        // directly grants permission without creating a push subscription.
+        const result = await requestOneSignalPermissionAndRegister(authUser.id);
+        if (!result.supported || result.status !== 'granted') {
+          setPermissionDenied(result.status === 'denied');
+          toast({
+            title: result.status === 'denied' ? "Permission blocked" : "Push is unavailable",
+            description: result.status === 'denied'
+              ? "Please enable notifications for Muv'it in your browser settings."
+              : "Open Muv'it over HTTPS in a supported browser, then try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+        setPermissionDenied(false);
       }
     }
 

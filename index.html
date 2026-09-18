@@ -51,7 +51,14 @@
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({ appId: "0b049171-0951-40ba-b90e-38fe7e06ae21", allowLocalhostAsSecureOrigin: true });
+      await OneSignal.init({
+        appId: "0b049171-0951-40ba-b90e-38fe7e06ae21",
+        allowLocalhostAsSecureOrigin: true,
+        // Keep OneSignal separate from the PWA's /sw.js. Only one service
+        // worker can control a scope, so sharing / would break web push.
+        serviceWorkerPath: "/onesignal/OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: "/onesignal/" },
+      });
     });
   </script>
 </head>
