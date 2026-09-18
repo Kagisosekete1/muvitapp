@@ -310,7 +310,7 @@ serve(async (req) => {
         .eq("user_id", payload.userId)
         .eq("provider", "onesignal")
         .eq("is_active", true)
-        .eq("permission_status", "granted");
+        .neq("permission_status", "denied");
 
       const subscriptionIds = [...new Set((subscriptions || []).map((s: any) => s.subscription_id).filter(Boolean))];
       let pushStatus = "not_sent";

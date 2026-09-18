@@ -232,10 +232,10 @@ serve(async (req) => {
     const { data: subscriptions } = await supabase
       .from("push_subscriptions")
       .select("subscription_id")
-      .eq("user_id", payload.userId)
-      .eq("provider", "onesignal")
-      .eq("is_active", true)
-      .eq("permission_status", "granted");
+        .eq("user_id", payload.userId)
+        .eq("provider", "onesignal")
+        .eq("is_active", true)
+        .neq("permission_status", "denied");
     const subscriptionIds = [...new Set((subscriptions || []).map((s: any) => s.subscription_id).filter(Boolean))];
 
     let pushDelivered = false;

@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { Capacitor } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
 import { getOneSignalPermissionStatus, loginOneSignalUser, requestOneSignalPermissionAndRegister } from '@/services/oneSignalService';
 
 interface Preferences {
@@ -75,13 +74,8 @@ const NotificationPreferencesPage: React.FC = () => {
 
   const checkPermissionStatus = async () => {
     if (Capacitor.isNativePlatform()) {
-      try {
-        const nativeStatus = await PushNotifications.checkPermissions();
-        setPermissionDenied(nativeStatus.receive === 'denied');
-      } catch {
-        const status = await getOneSignalPermissionStatus();
-        setPermissionDenied(status === 'denied');
-      }
+      const status = await getOneSignalPermissionStatus();
+      setPermissionDenied(status === 'denied');
       setPermissionChecked(true);
       return;
     }
@@ -140,28 +134,16 @@ const NotificationPreferencesPage: React.FC = () => {
     // Handle push permission specially
     if (key === 'push_enabled' && value) {
       if (Capacitor.isNativePlatform()) {
-        let nativeReceive = 'prompt';
-        try {
-          let nativeStatus = await PushNotifications.checkPermissions();
-          if (nativeStatus.receive === 'prompt') {
-            nativeStatus = await PushNotifications.requestPermissions();
-          }
-          nativeReceive = nativeStatus.receive;
-        } catch {
-          nativeReceive = 'prompt';
-        }
-
-        if (nativeReceive === 'denied') {
+        const result = await requestOneSignalPermissionAndRegister(authUser.id);
+        if (result.status === 'denied') {
           setPermissionDenied(true);
           toast({
             title: "Phone notifications are off",
-            description: "Android says notifications are not allowed for Muv'it. Please enable them in phone settings.",
+            description: "Please enable notifications for Muv'it in your phone settings.",
             variant: "destructive",
           });
           return;
         }
-
-        const result = await requestOneSignalPermissionAndRegister(authUser.id);
         if (!result.supported) {
           await loginOneSignalUser(authUser.id);
         }

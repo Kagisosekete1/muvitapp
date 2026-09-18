@@ -72,6 +72,9 @@ const waitForDeviceReady = () =>
 const getNativePlugin = async () => {
   await waitForDeviceReady();
   for (let attempt = 0; attempt < 12; attempt += 1) {
+    // The Cordova bridge exposes the native OneSignal SDK here. Do not fall
+    // back to window.OneSignal: that is the web SDK and cannot register an
+    // Android device subscription for closed-app delivery.
     const plugin = window.plugins?.OneSignal;
     if (plugin) return plugin;
     await wait(500);
@@ -233,14 +236,14 @@ export function handleNotificationOpen(data: Record<string, any> | undefined | n
 
 /** Persist the current subscription id for this device. */
 async function syncPlayerIdWithBackend(playerId: string | null | undefined, userId: string, permissionStatus = 'unknown') {
-  if (!playerId || !userId) return;
+  if (!playerId || !userId) return false;
   try {
-    await supabase
+    const { error: profileError } = await supabase
       .from('profiles')
       .update({ onesignal_player_id: playerId })
       .eq('user_id', userId);
 
-    await (supabase as any)
+    const { error: subscriptionError } = await (supabase as any)
       .from('push_subscriptions')
       .upsert({
         user_id: userId,
@@ -252,8 +255,20 @@ async function syncPlayerIdWithBackend(playerId: string | null | undefined, user
         is_active: true,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,device_id,provider' });
+
+    if (profileError || subscriptionError) {
+      if (import.meta.env.DEV) {
+        console.warn('[OneSignal] subscription persistence failed', {
+          profileError: profileError?.message,
+          subscriptionError: subscriptionError?.message,
+        });
+      }
+      return false;
+    }
+    return true;
   } catch (err) {
-    console.warn('[OneSignal] failed to sync subscription id', err);
+    if (import.meta.env.DEV) console.warn('[OneSignal] failed to sync subscription id', err);
+    return false;
   }
 }
 
@@ -283,6 +298,7 @@ export async function initOneSignal() {
     if (!plugin) return; // plugin only present in a real device build
     try {
       plugin.initialize?.(ONESIGNAL_APP_ID);
+      if (import.meta.env.DEV) plugin.Debug?.setLogLevel?.(6);
       let permission = await getPermissionStatus(plugin);
       if (permission !== 'granted') {
         await plugin.Notifications?.requestPermission?.(true);
@@ -342,7 +358,7 @@ export async function loginOneSignalUser(userId: string) {
         }
       });
     } catch (err) {
-      console.warn('[OneSignal] native login failed', err);
+      if (import.meta.env.DEV) console.warn('[OneSignal] native login failed', err);
     }
     return;
   }
