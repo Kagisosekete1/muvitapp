@@ -360,8 +360,34 @@ serve(async (req) => {
           } catch {
             providerResponse = { raw: responseText.slice(0, 500) };
           }
-          pushStatus = resp.ok ? "sent" : "failed";
-          if (!resp.ok) pushError = responseText.slice(0, 500);
+          // OneSignal can return HTTP 200 with an `errors` object when every
+          // requested subscription is stale. Treat that as a delivery failure,
+          // rather than telling the Activity screen that a push was sent.
+          const oneSignalErrors =
+            providerResponse && typeof providerResponse === "object"
+              ? (providerResponse as { errors?: unknown }).errors
+              : undefined;
+          const rejectedByProvider = Boolean(
+            oneSignalErrors &&
+              (typeof oneSignalErrors !== "object" || Object.keys(oneSignalErrors as object).length > 0),
+          );
+          pushStatus = resp.ok && !rejectedByProvider ? "sent" : "failed";
+          if (!resp.ok || rejectedByProvider) pushError = responseText.slice(0, 500);
+
+          const invalidSubscriptionIds =
+            oneSignalErrors && typeof oneSignalErrors === "object"
+              ? (oneSignalErrors as { invalid_player_ids?: unknown }).invalid_player_ids
+              : undefined;
+          if (Array.isArray(invalidSubscriptionIds) && invalidSubscriptionIds.length > 0) {
+            await supabase
+              .from("push_subscriptions")
+              .update({
+                is_active: false,
+                permission_status: "unknown",
+                updated_at: new Date().toISOString(),
+              })
+              .in("subscription_id", invalidSubscriptionIds.filter((id): id is string => typeof id === "string"));
+          }
           console.log("[notification-dispatcher] OneSignal", resp.status, responseText);
         } catch (err) {
           pushStatus = "failed";
