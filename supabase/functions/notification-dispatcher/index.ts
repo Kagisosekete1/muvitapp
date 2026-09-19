@@ -7,9 +7,12 @@ const corsHeaders = {
 };
 
 const DEFAULT_ONESIGNAL_APP_ID = "0b049171-0951-40ba-b90e-38fe7e06ae21";
-const APP_LOGO_URL =
-  Deno.env.get("APP_LOGO_URL") ||
-  "https://storage.googleapis.com/gpt-engineer-file-uploads/3IJdB71tehaMuxKUHI9gI6WMXsq1/uploads/1768602440644-Muv%27it.png";
+const APP_ICON_URL =
+  Deno.env.get("APP_ICON_URL") ||
+  "https://muvit.site/icons/android/icon-192x192.png";
+const APP_BANNER_URL =
+  Deno.env.get("APP_BANNER_URL") ||
+  "https://muvit.site/muvit-notification-banner.png";
 
 type PushType =
   | "like"
@@ -242,10 +245,23 @@ serve(async (req) => {
         .eq("user_id", payload.fromUserId)
         .maybeSingle();
       const senderName = actor?.display_name || actor?.username || "Someone";
-      const senderAvatar = actor?.avatar_url || APP_LOGO_URL;
+      const senderAvatar = actor?.avatar_url || APP_ICON_URL;
       const { title, body } = bodyFor(payload.type, senderName, payload.message);
       const eventKey = buildEventKey(payload);
       const deepLink = buildDeepLink(payload, actor?.username);
+
+      // A Reel notification should show the Reel cover in Android's expanded
+      // notification and Chrome's web push image. Other activity uses the
+      // supplied Muv'it brand banner instead of a generic blue placeholder.
+      let activityImage = APP_BANNER_URL;
+      if (payload.reelId) {
+        const { data: reel } = await supabase
+          .from("reels")
+          .select("thumbnail_url")
+          .eq("id", payload.reelId)
+          .maybeSingle();
+        if (reel?.thumbnail_url) activityImage = reel.thumbnail_url;
+      }
 
       const { data: row, error: insertError } = await supabase
         .from("notifications")
@@ -326,11 +342,13 @@ serve(async (req) => {
           target_channel: "push",
           headings: { en: title },
           contents: { en: body },
-          large_icon: senderAvatar,
-          big_picture: senderAvatar,
-          chrome_web_icon: senderAvatar,
-          chrome_web_image: senderAvatar,
+          // Android requires a local monochrome small icon. The native M mark
+          // is configured under this name in AndroidManifest.xml.
           small_icon: "ic_stat_onesignal_default",
+          large_icon: senderAvatar,
+          big_picture: activityImage,
+          chrome_web_icon: APP_ICON_URL,
+          chrome_web_image: activityImage,
           data: {
             type: payload.type,
             notification_id: notificationId,

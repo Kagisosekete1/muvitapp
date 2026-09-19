@@ -31,6 +31,7 @@ interface Notification {
   body?: string | null;
   message: string | null;
   actor_avatar_url?: string | null;
+  activity_thumbnail_url?: string | null;
   deep_link?: string | null;
   is_read: boolean;
   created_at: string;
@@ -131,6 +132,15 @@ const Activity = () => {
         .select('user_id, username, display_name, avatar_url, verified')
         .in('user_id', userIds);
 
+      const reelIds = [...new Set(notifs.map(n => n.reel_id).filter((id): id is string => Boolean(id)))];
+      const { data: reels } = reelIds.length
+        ? await supabase
+            .from('reels')
+            .select('id, thumbnail_url')
+            .in('id', reelIds)
+        : { data: [] };
+      const reelThumbnailMap = new Map((reels || []).map(reel => [reel.id, reel.thumbnail_url]));
+
       // Check follow relationships for follow-type notifications
       const followNotifUserIds = [...new Set(notifs.filter(n => n.type === 'follow').map(n => n.from_user_id))];
       let followBackMap = new Map<string, boolean>();
@@ -149,6 +159,7 @@ const Activity = () => {
       const enrichedNotifs = notifs.map(n => ({
         ...n,
         from_user: profiles?.find(p => p.user_id === n.from_user_id),
+        activity_thumbnail_url: n.reel_id ? reelThumbnailMap.get(n.reel_id) || null : null,
         followStatus: n.type === 'follow' 
           ? (followBackMap.has(n.from_user_id) ? 'mutual' as const : 'follows_you' as const) 
           : null,
@@ -194,8 +205,17 @@ const Activity = () => {
 
           const newNotif = {
             ...payload.new as Notification,
-            from_user: profile || undefined
+            from_user: profile || undefined,
           };
+
+          if (newNotif.reel_id) {
+            const { data: reel } = await supabase
+              .from('reels')
+              .select('thumbnail_url')
+              .eq('id', newNotif.reel_id)
+              .maybeSingle();
+            newNotif.activity_thumbnail_url = reel?.thumbnail_url || null;
+          }
 
           setNotifications(prev => [newNotif, ...prev]);
           
@@ -621,10 +641,21 @@ const Activity = () => {
                           </p>
                           <span className="text-xs text-muted-foreground">{formatTime(notif.created_at)}</span>
                         </div>
-                        <Avatar className="w-10 h-10 border border-border bg-background">
-                          <AvatarImage src={notif.actor_avatar_url || notif.from_user?.avatar_url || ''} />
-                          <AvatarFallback>{notif.from_user?.display_name?.[0] || '?'}</AvatarFallback>
-                        </Avatar>
+                        <div className="w-10 h-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+                          {notif.activity_thumbnail_url ? (
+                            <img
+                              src={notif.activity_thumbnail_url}
+                              alt="Muv'z cover"
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <Avatar className="h-full w-full rounded-none">
+                              <AvatarImage src={notif.actor_avatar_url || notif.from_user?.avatar_url || ''} />
+                              <AvatarFallback>{notif.from_user?.display_name?.[0] || '?'}</AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

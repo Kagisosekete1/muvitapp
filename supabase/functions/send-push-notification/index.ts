@@ -7,9 +7,12 @@ const corsHeaders = {
 };
 
 const DEFAULT_ONESIGNAL_APP_ID = "0b049171-0951-40ba-b90e-38fe7e06ae21";
-const APP_LOGO_URL =
-  Deno.env.get("APP_LOGO_URL") ||
-  "https://storage.googleapis.com/gpt-engineer-file-uploads/3IJdB71tehaMuxKUHI9gI6WMXsq1/uploads/1768602440644-Muv%27it.png";
+const APP_ICON_URL =
+  Deno.env.get("APP_ICON_URL") ||
+  "https://muvit.site/icons/android/icon-192x192.png";
+const APP_BANNER_URL =
+  Deno.env.get("APP_BANNER_URL") ||
+  "https://muvit.site/muvit-notification-banner.png";
 
 type PushType =
   | "like"
@@ -187,10 +190,20 @@ serve(async (req) => {
       .eq("user_id", payload.fromUserId)
       .single();
     const senderName = fromUser?.display_name || fromUser?.username || "Someone";
-    const senderAvatar = fromUser?.avatar_url || APP_LOGO_URL;
+    const senderAvatar = fromUser?.avatar_url || APP_ICON_URL;
     const { title, body } = bodyFor(payload.type, senderName, payload.message);
     const eventKey = buildEventKey(payload);
     const deepLink = buildDeepLink(payload, fromUser?.username);
+
+    let activityImage = APP_BANNER_URL;
+    if (payload.reelId) {
+      const { data: reel } = await supabase
+        .from("reels")
+        .select("thumbnail_url")
+        .eq("id", payload.reelId)
+        .maybeSingle();
+      if (reel?.thumbnail_url) activityImage = reel.thumbnail_url;
+    }
 
     let notificationId: string | null = null;
     if (payload.type !== "message") {
@@ -262,12 +275,12 @@ serve(async (req) => {
         headings: { en: title },
         contents: { en: body },
         large_icon: senderAvatar,
-        chrome_web_icon: senderAvatar,
-        firefox_icon: senderAvatar,
-        big_picture: senderAvatar,
-        chrome_web_image: senderAvatar,
+        chrome_web_icon: APP_ICON_URL,
+        firefox_icon: APP_ICON_URL,
+        big_picture: activityImage,
+        chrome_web_image: activityImage,
         small_icon: "ic_stat_onesignal_default",
-        chrome_web_badge: APP_LOGO_URL,
+        chrome_web_badge: APP_ICON_URL,
         data: additionalData,
       };
 
