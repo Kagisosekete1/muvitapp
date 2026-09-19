@@ -4,7 +4,15 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys()
+      .then((cacheNames) => Promise.all(
+        cacheNames
+          .filter((cacheName) => cacheName.startsWith('muvit-') && cacheName !== CACHE_NAME)
+          .map((cacheName) => caches.delete(cacheName))
+      ))
+      .then(() => clients.claim())
+  );
 });
 
 // Handle push events
@@ -73,7 +81,7 @@ async function syncPendingActions() {
 }
 
 // Cache strategies for offline support
-const CACHE_NAME = 'muvit-v1';
+const CACHE_NAME = 'muvit-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -88,6 +96,23 @@ self.addEventListener('fetch', (event) => {
 
   // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) return;
+
+  // Always fetch app navigations from the network first. This prevents an
+  // installed PWA from being trapped on an old index.html after a release.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            caches.open(CACHE_NAME)
+              .then((cache) => cache.put('/index.html', response.clone()));
+          }
+          return response;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request)
