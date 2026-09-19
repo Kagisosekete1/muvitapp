@@ -348,6 +348,10 @@ serve(async (req) => {
           large_icon: senderAvatar,
           big_picture: activityImage,
           chrome_web_icon: APP_ICON_URL,
+          // Chrome on Android uses this value for the small icon at the left
+          // of a web-push notification. Without it, OneSignal falls back to
+          // its bell badge even when chrome_web_icon is set.
+          chrome_web_badge: APP_ICON_URL,
           chrome_web_image: activityImage,
           data: {
             type: payload.type,

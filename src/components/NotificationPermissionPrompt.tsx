@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Bell, ShieldCheck, Heart, MessageCircle } from 'lucide-react';
+import { ShieldCheck, Heart, MessageCircle } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { getOneSignalPermissionStatus, requestOneSignalPermissionAndRegister } from '@/services/oneSignalService';
 
 const PROMPT_KEY = 'reelit_notif_permission_prompted_v1';
+const PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 type Props = {
   /** Show after splash to avoid stacking modals */
@@ -19,9 +20,10 @@ const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
   const isSupported = permissionStatus !== 'unsupported' && permissionStatus !== 'unavailable';
   const isEnabled = permissionStatus === 'granted';
 
-  const hasPrompted = useMemo(() => {
+  const hasRecentPrompt = useMemo(() => {
     try {
-      return localStorage.getItem(PROMPT_KEY) === 'true';
+      const promptedAt = Number(localStorage.getItem(PROMPT_KEY));
+      return Number.isFinite(promptedAt) && Date.now() - promptedAt < PROMPT_COOLDOWN_MS;
     } catch {
       return false;
     }
@@ -36,16 +38,16 @@ const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
     if (!authUser) return;
     if (!isSupported) return;
     if (isEnabled) return;
-    if (hasPrompted) return;
+    if (hasRecentPrompt) return;
 
     // Slight delay to avoid jank on first render
     const t = setTimeout(() => setOpen(true), 700);
     return () => clearTimeout(t);
-  }, [authUser, enabled, isSupported, isEnabled, hasPrompted]);
+  }, [authUser, enabled, isSupported, isEnabled, hasRecentPrompt]);
 
   const markPrompted = () => {
     try {
-      localStorage.setItem(PROMPT_KEY, 'true');
+      localStorage.setItem(PROMPT_KEY, String(Date.now()));
     } catch {
       // ignore
     }
@@ -64,20 +66,20 @@ const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
     setOpen(false);
   };
 
-  if (!enabled || !isSupported || isEnabled || hasPrompted) return null;
+  if (!enabled || !isSupported || isEnabled || hasRecentPrompt) return null;
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? setOpen(true) : handleNotNow())}>
       <DialogContent className="sm:max-w-[520px] rounded-3xl bg-card border-border">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary">
-              <Bell className="h-5 w-5 text-foreground" />
+            <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-[#1697e8]">
+              <img src="/icons/android/icon-192x192.png" alt="Muv'it" className="h-full w-full object-cover" />
             </span>
-            Turn on notifications?
+            Allow Muv'it notifications?
           </DialogTitle>
           <DialogDescription className="text-sm">
-            Get real-time alerts so you don’t miss important activity.
+            Approve the next phone prompt to receive likes, comments, follows, live alerts, and messages even after you close Muv'it.
           </DialogDescription>
         </DialogHeader>
 
@@ -86,15 +88,15 @@ const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
             <ul className="space-y-3 text-sm text-foreground/90">
               <li className="flex items-start gap-3">
                 <Heart className="mt-0.5 h-4 w-4 text-primary" />
-                <span>Instant alerts when someone likes your reel.</span>
+                <span>Likes, comments, replies, follows, reposts, and mentions.</span>
               </li>
               <li className="flex items-start gap-3">
                 <MessageCircle className="mt-0.5 h-4 w-4 text-primary" />
-                <span>Know when people comment or follow you.</span>
+                <span>Messages, battles, upload updates, and live alerts.</span>
               </li>
               <li className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 h-4 w-4 text-primary" />
-                <span>You can change this anytime in your phone settings.</span>
+                <span>Choose Allow in Chrome/Android. You can change it any time in Muv'it settings.</span>
               </li>
             </ul>
           </div>
@@ -104,7 +106,7 @@ const NotificationPermissionPrompt: React.FC<Props> = ({ enabled = true }) => {
               Not now
             </Button>
             <Button className="flex-1 rounded-2xl" onClick={handleEnable}>
-              Enable
+              Allow notifications
             </Button>
           </div>
         </div>
