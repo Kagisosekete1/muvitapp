@@ -16,7 +16,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefresh';
-import { deduplicateNotifications } from '@/lib/notificationDeduplication';
 import { getPreviousRoute, popRouteFromHistory } from '@/hooks/useRouteMemory';
 
 interface Notification {
@@ -117,44 +116,51 @@ const Activity = () => {
     if (!authUser) return;
     setLoading(true);
     
+    // Keep the first render bounded. Loading an unbounded activity history was
+    // making this screen wait on every old actor profile and Reel cover.
     const { data: notifs, error } = await supabase
       .from('notifications')
       .select('*')
       .eq('user_id', authUser.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(80);
 
     if (error) {
       console.error('Error fetching notifications:', error);
     } else if (notifs) {
       const userIds = [...new Set(notifs.map(n => n.from_user_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, username, display_name, avatar_url, verified')
-        .in('user_id', userIds);
-
       const reelIds = [...new Set(notifs.map(n => n.reel_id).filter((id): id is string => Boolean(id)))];
-      const { data: reels } = reelIds.length
-        ? await supabase
+      const followNotifUserIds = [...new Set(notifs.filter(n => n.type === 'follow').map(n => n.from_user_id))];
+
+      const profilesRequest = userIds.length
+        ? supabase
+            .from('profiles')
+            .select('user_id, username, display_name, avatar_url, verified')
+            .in('user_id', userIds)
+        : Promise.resolve({ data: [] });
+      const reelsRequest = reelIds.length
+        ? supabase
             .from('reels')
             .select('id, thumbnail_url')
             .in('id', reelIds)
-        : { data: [] };
+        : Promise.resolve({ data: [] });
+      const followBacksRequest = followNotifUserIds.length
+        ? supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', authUser.id)
+            .in('following_id', followNotifUserIds)
+        : Promise.resolve({ data: [] });
+      const [{ data: profiles }, { data: reels }, { data: followBacks }] = await Promise.all([
+        profilesRequest,
+        reelsRequest,
+        followBacksRequest,
+      ]);
       const reelThumbnailMap = new Map((reels || []).map(reel => [reel.id, reel.thumbnail_url]));
 
       // Check follow relationships for follow-type notifications
-      const followNotifUserIds = [...new Set(notifs.filter(n => n.type === 'follow').map(n => n.from_user_id))];
       let followBackMap = new Map<string, boolean>();
-      
-      if (followNotifUserIds.length > 0) {
-        // Check which of these users we follow back
-        const { data: followBacks } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', authUser.id)
-          .in('following_id', followNotifUserIds);
-        
-        followBacks?.forEach(f => followBackMap.set(f.following_id, true));
-      }
+      followBacks?.forEach(f => followBackMap.set(f.following_id, true));
 
       const enrichedNotifs = notifs.map(n => ({
         ...n,
@@ -438,12 +444,11 @@ const Activity = () => {
     setSearchQuery(query);
   }, []);
 
-  // Deduplicate and filter notifications based on search
+  // Events are already deduplicated by their server-side event key. Do not
+  // hide separate recent likes/comments in Activity just because they share an
+  // actor or Muv'z.
   const processedNotifications = useMemo(() => {
-    // First deduplicate - cast back to our enriched type
-    const deduplicated = deduplicateNotifications(notifications) as Notification[];
-    
-    const categoryFiltered = deduplicated.filter((n) => {
+    const categoryFiltered = notifications.filter((n) => {
       if (section === 'all') return true;
       if (section === 'messages') return n.type === 'message' || n.type === 'message_request';
       if (section === 'liveBattles') return n.type.startsWith('live') || n.type.startsWith('battle_') || n.type === 'stream_ended';
@@ -571,7 +576,7 @@ const Activity = () => {
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold truncate">{c.other_user?.display_name || 'Unknown'}</p>
-                            <p className="text-xs text-muted-foreground truncate">{c.last_message || 'Say hi ðŸ‘‹'}</p>
+                            <p className="text-xs text-muted-foreground truncate">{c.last_message || 'Say hi'}</p>
                           </div>
                           <span className="text-xs text-muted-foreground">{formatTime(c.last_message_at)}</span>
                         </div>
@@ -633,10 +638,10 @@ const Activity = () => {
                             </span>
                             {' '}{notif.body || notif.message || getNotificationAction(notif.type)}
                             {notif.followStatus === 'mutual' && (
-                              <span className="ml-1 text-xs text-primary font-medium">â€¢ Mutual</span>
+                              <span className="ml-1 text-xs text-primary font-medium">- Mutual</span>
                             )}
                             {notif.followStatus === 'follows_you' && (
-                              <span className="ml-1 text-xs text-muted-foreground">â€¢ Follows you</span>
+                              <span className="ml-1 text-xs text-muted-foreground">- Follows you</span>
                             )}
                           </p>
                           <span className="text-xs text-muted-foreground">{formatTime(notif.created_at)}</span>

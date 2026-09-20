@@ -330,6 +330,9 @@ serve(async (req) => {
       let providerResponse: unknown = null;
 
       if (oneSignalRestKey && oneSignalAppId) {
+        // Never reuse a collapse id for a different Muv'it event. Reusing one
+        // makes Android/web push replace an earlier notification in the tray.
+        const collapseId = notificationId;
         const notification = {
           app_id: oneSignalAppId,
           // Always target the OneSignal external id set by loginOneSignalUser.
@@ -352,6 +355,9 @@ serve(async (req) => {
           // its bell badge even when chrome_web_icon is set.
           chrome_web_badge: APP_BADGE_URL,
           chrome_web_image: activityImage,
+          collapse_id: collapseId,
+          android_group: "muvit-activity",
+          android_group_message: { en: "$[notif_count] new Muv'it notifications" },
           data: {
             type: payload.type,
             notification_id: notificationId,

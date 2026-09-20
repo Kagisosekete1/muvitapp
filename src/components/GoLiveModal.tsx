@@ -562,12 +562,14 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
           deviceId: { exact: preferredDeviceId },
           width: { ideal: PREFERRED_PORTRAIT_WIDTH },
           height: { ideal: PREFERRED_PORTRAIT_HEIGHT },
+          aspectRatio: { ideal: PORTRAIT_STAGE_ASPECT_RATIO },
           frameRate: { ideal: MAX_CAMERA_FRAME_RATE, max: MAX_CAMERA_FRAME_RATE },
         },
         {
           deviceId: { exact: preferredDeviceId },
           width: { ideal: FALLBACK_PORTRAIT_WIDTH },
           height: { ideal: FALLBACK_PORTRAIT_HEIGHT },
+          aspectRatio: { ideal: PORTRAIT_STAGE_ASPECT_RATIO },
           frameRate: { ideal: 24, max: MAX_CAMERA_FRAME_RATE },
         },
       );
@@ -578,12 +580,14 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
         facingMode: { ideal: facingMode },
         width: { ideal: PREFERRED_PORTRAIT_WIDTH },
         height: { ideal: PREFERRED_PORTRAIT_HEIGHT },
+        aspectRatio: { ideal: PORTRAIT_STAGE_ASPECT_RATIO },
         frameRate: { ideal: MAX_CAMERA_FRAME_RATE, max: MAX_CAMERA_FRAME_RATE },
       },
       {
         facingMode: { ideal: facingMode },
         width: { ideal: FALLBACK_PORTRAIT_WIDTH },
         height: { ideal: FALLBACK_PORTRAIT_HEIGHT },
+        aspectRatio: { ideal: PORTRAIT_STAGE_ASPECT_RATIO },
         frameRate: { ideal: 24, max: MAX_CAMERA_FRAME_RATE },
       },
       {
@@ -641,11 +645,13 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
       {
         width: { ideal: PREFERRED_PORTRAIT_WIDTH },
         height: { ideal: PREFERRED_PORTRAIT_HEIGHT },
+        aspectRatio: { ideal: PORTRAIT_STAGE_ASPECT_RATIO },
         frameRate: { ideal: MAX_CAMERA_FRAME_RATE, max: MAX_CAMERA_FRAME_RATE },
       },
       {
         width: { ideal: FALLBACK_PORTRAIT_WIDTH },
         height: { ideal: FALLBACK_PORTRAIT_HEIGHT },
+        aspectRatio: { ideal: PORTRAIT_STAGE_ASPECT_RATIO },
         frameRate: { ideal: 24, max: MAX_CAMERA_FRAME_RATE },
       },
       {
@@ -1233,6 +1239,7 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
   }, [step, isOpen]);
 
   const startActualLive = async () => {
+    let liveMediaStream: MediaStream | null = null;
     try {
       const previewVideoTrack = stream?.getVideoTracks()[0] ?? null;
       let microphoneStream: MediaStream | null = null;
@@ -1275,10 +1282,19 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
         liveVideoTrack,
         ...(microphoneStream?.getAudioTracks() ?? []),
       ]);
+      liveMediaStream = mediaStream;
 
-      // Create live stream record in database
+      // Enter the portrait live stage as soon as media is ready. Database and
+      // LiveKit connection continue in the background, rather than keeping
+      // the creator stuck on the setup screen while those services respond.
       const sessionId = `live_${authUser!.id}_${Date.now()}`;
       const streamTitle = liveTitle.trim() || `${currentUser?.displayName || 'Muvit user'} is live`;
+
+      setLiveSessionId(sessionId);
+      setStream(mediaStream);
+      setStep('live');
+      setIsLive(true);
+      setLiveStartTime(new Date());
 
       const { error } = await supabase
         .from('live_streams')
@@ -1297,11 +1313,17 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
         throw error;
       }
 
-      setLiveSessionId(sessionId);
-      setStream(mediaStream);
-      setStep('live');
-      setIsLive(true);
-      setLiveStartTime(new Date());
+      // Retire only older sessions after the new one is safely created. This
+      // keeps the start action fast and prevents a stale stream from lingering.
+      void supabase
+        .from('live_streams')
+        .update({ is_active: false, status: 'ended', ended_at: new Date().toISOString() })
+        .eq('user_id', authUser!.id)
+        .eq('is_active', true)
+        .neq('session_id', sessionId)
+        .then(({ error: staleLiveError }) => {
+          if (staleLiveError) console.warn('Unable to retire an older live stream:', staleLiveError);
+        });
 
       // Start recording after the live session is already active so recording
       // support can never block the stream from starting.
@@ -1365,6 +1387,7 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
       });
     } catch (error: any) {
       console.error('Camera access error:', error);
+      liveMediaStream?.getTracks().forEach((track) => track.stop());
       toast({
         title: "Camera access required",
         description: "Please allow camera and microphone access to go live.",
@@ -1390,21 +1413,6 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
 
     setIsStartingLive(true);
     try {
-      // Check for existing active live streams from this user and end them
-      const { data: existingLives } = await supabase
-        .from('live_streams')
-        .select('id, session_id')
-        .eq('user_id', authUser.id)
-        .eq('is_active', true);
-
-      if (existingLives && existingLives.length > 0) {
-        await supabase
-          .from('live_streams')
-          .update({ is_active: false, ended_at: new Date().toISOString() })
-          .eq('user_id', authUser.id)
-          .eq('is_active', true);
-      }
-
       await startActualLive();
     } finally {
       setIsStartingLive(false);
@@ -2070,6 +2078,11 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
                 <div className="bg-white/10 backdrop-blur-md px-2 py-1 rounded-full border border-white/10">
                   <span className="text-white text-xs font-medium">{formatDuration(liveDuration)}</span>
                 </div>
+                {liveKitConnectionState !== 'connected' && (
+                  <div className="bg-amber-500/20 backdrop-blur-md px-2 py-1 rounded-full border border-amber-300/20">
+                    <span className="text-amber-100 text-xs font-medium">Connecting...</span>
+                  </div>
+                )}
               </div>
               
               <Button

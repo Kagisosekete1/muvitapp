@@ -247,6 +247,9 @@ serve(async (req) => {
 
     let pushDelivered = false;
     if (oneSignalAppId && oneSignalRestKey) {
+      // Each event must retain its own tray item. A repeated collapse id is
+      // interpreted by OneSignal/Android as an update to an older alert.
+      const collapseId = notificationId || crypto.randomUUID();
       const additionalData: Record<string, unknown> = {
         type: payload.type,
         from_user_id: payload.fromUserId,
@@ -275,6 +278,9 @@ serve(async (req) => {
         chrome_web_image: activityImage,
         small_icon: "ic_stat_onesignal_default",
         chrome_web_badge: APP_BADGE_URL,
+        collapse_id: collapseId,
+        android_group: "muvit-activity",
+        android_group_message: { en: "$[notif_count] new Muv'it notifications" },
         data: additionalData,
       };
 
