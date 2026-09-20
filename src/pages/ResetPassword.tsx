@@ -17,16 +17,40 @@ const ResetPassword = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let cancelled = false;
     // Supabase emits PASSWORD_RECOVERY after the user lands from the email link.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setReady(true);
+      if (session?.user && window.location.hash.includes('type=recovery')) setReady(true);
     });
-    // If already in a recovery session (or hash present), allow it.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
-    if (window.location.hash.includes('type=recovery')) setReady(true);
-    return () => subscription.unsubscribe();
+
+    const restoreRecoverySession = async () => {
+      const url = new URL(window.location.href);
+      const hash = new URLSearchParams(url.hash.replace(/^#/, ''));
+      const code = url.searchParams.get('code') || hash.get('code');
+      const accessToken = hash.get('access_token');
+      const refreshToken = hash.get('refresh_token');
+      const isRecovery = url.pathname.endsWith('/reset-password')
+        || url.searchParams.get('type') === 'recovery'
+        || hash.get('type') === 'recovery';
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) console.warn('[auth] password recovery code exchange failed', error.message);
+      } else if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (error) console.warn('[auth] password recovery session restore failed', error.message);
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (!cancelled && isRecovery && data.session) setReady(true);
+    };
+
+    restoreRecoverySession();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +84,7 @@ const ResetPassword = () => {
           </div>
           <h1 className="text-3xl font-bold text-foreground">Set a new password</h1>
           <p className="text-muted-foreground text-sm">
-            {ready ? 'Choose a new password for your account.' : 'Waiting for recovery link...'}
+            {ready ? 'Choose a new password for your account.' : 'This recovery link is being verified...'}
           </p>
         </div>
 
