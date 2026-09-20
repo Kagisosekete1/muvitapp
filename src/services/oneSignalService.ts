@@ -100,7 +100,15 @@ const getPermissionStatus = async (provider: any) => {
     }
 
     const canRequest = await provider?.Notifications?.canRequestPermission?.();
-    return canRequest === false ? 'denied' : 'unknown';
+    if (canRequest === false) return 'denied';
+
+    // Web SDK fields can briefly be unavailable while Android Chrome restores
+    // an installed PWA. The browser permission remains authoritative here.
+    if (!isNative() && typeof Notification !== 'undefined') {
+      if (Notification.permission === 'granted') return 'granted';
+      if (Notification.permission === 'denied') return 'denied';
+    }
+    return 'unknown';
   } catch {
     return 'unknown';
   }
@@ -138,6 +146,28 @@ const getNativeSubscriptionStatus = async (plugin: any) => {
     // Fall back to the raw OS permission state below.
   }
   return permission;
+};
+
+// Mobile Chrome can create a Web Push subscription a few seconds after the
+// permission sheet closes. Do not treat the first empty read as a failed
+// registration: wait for the actual OneSignal subscription id before syncing.
+const getWebSubscriptionId = async (oneSignal: any) => {
+  const pushSubscription = oneSignal?.User?.PushSubscription;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    try {
+      const id = pushSubscription?.id || (await pushSubscription?.getIdAsync?.());
+      if (id) return id as string;
+
+      const optedIn = await pushSubscription?.getOptedInAsync?.();
+      if (optedIn === false && (await getPermissionStatus(oneSignal)) === 'granted') {
+        await pushSubscription?.optIn?.();
+      }
+    } catch {
+      // The SDK is still finishing its subscription setup.
+    }
+    await wait(500);
+  }
+  return null;
 };
 
 export async function getOneSignalPermissionStatus() {
@@ -367,15 +397,15 @@ export async function loginOneSignalUser(userId: string) {
     try {
       await OneSignal.login(userId);
       const permission = await getPermissionStatus(OneSignal);
-      // v16 exposes the current subscription id
-      const playerId: string | undefined =
-        OneSignal.User?.PushSubscription?.id ||
-        (await OneSignal.User?.PushSubscription?.getIdAsync?.());
+      // On Android Chrome this may not exist immediately after OneSignal.login
+      // or after accepting permission, so wait for it instead of losing the
+      // device registration until a future app launch.
+      const playerId = await getWebSubscriptionId(OneSignal);
       if (playerId) await syncPlayerIdWithBackend(playerId, userId, permission);
 
       // Update on subscription changes (permission granted later, id rotated, etc.)
       OneSignal.User?.PushSubscription?.addEventListener?.('change', (evt: any) => {
-        const newId = evt?.current?.id;
+        const newId = evt?.current?.id || evt?.current?.subscriptionId;
         if (newId) {
           getPermissionStatus(OneSignal).then((status) => syncPlayerIdWithBackend(newId, userId, status));
         }
@@ -439,6 +469,10 @@ export async function requestOneSignalPermissionAndRegister(userId: string) {
         await OneSignal.Notifications?.requestPermission?.();
         const status = await getPermissionStatus(OneSignal);
         await loginOneSignalUser(userId);
+        // Re-read after login because Android Chrome completes Web Push setup
+        // asynchronously after the user accepts the native permission prompt.
+        const registeredId = await getWebSubscriptionId(OneSignal);
+        if (registeredId) await syncPlayerIdWithBackend(registeredId, userId, status);
         result = { supported: true, granted: status === 'granted', status };
       } catch (err) {
         console.warn('[OneSignal] web permission request failed', err);
@@ -447,7 +481,7 @@ export async function requestOneSignalPermissionAndRegister(userId: string) {
         resolve();
       }
     });
-    setTimeout(resolve, 3000);
+    setTimeout(resolve, 10000);
   });
   return result;
 }

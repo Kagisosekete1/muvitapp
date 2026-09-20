@@ -34,19 +34,17 @@ function Save-Png {
 }
 
 function Save-NotificationIcon {
-  $targetPath = Join-Path $root "android\app\src\main\res\drawable\ic_stat_onesignal_default.png"
-  $targetDir = Split-Path -Parent $targetPath
-  New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
-
-  # Android status-bar icons are alpha masks. Keep only the white M mark from
-  # the official asset so Android can tint it correctly in the notification tray.
+  # Android and Chrome use alpha-mask notification badges. Crop the M mark
+  # directly out of the official logo instead of shrinking its blue app tile.
   $bitmap = New-Object System.Drawing.Bitmap 96, 96
   $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
   $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
   $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
   $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
   $graphics.Clear([System.Drawing.Color]::Transparent)
-  $graphics.DrawImage($source, 0, 0, 96, 96)
+  $destination = New-Object System.Drawing.Rectangle 5, 5, 86, 86
+  $sourceRectangle = New-Object System.Drawing.Rectangle 220, 220, 560, 560
+  $graphics.DrawImage($source, $destination, $sourceRectangle, [System.Drawing.GraphicsUnit]::Pixel)
   $graphics.Dispose()
 
   for ($y = 0; $y -lt $bitmap.Height; $y++) {
@@ -57,8 +55,44 @@ function Save-NotificationIcon {
     }
   }
 
-  $bitmap.Save($targetPath, [System.Drawing.Imaging.ImageFormat]::Png)
+  foreach ($relativePath in @(
+    "android\app\src\main\res\drawable\ic_stat_onesignal_default.png",
+    "public\icons\onesignal\muvit-badge.png"
+  )) {
+    $targetPath = Join-Path $root $relativePath
+    $targetDir = Split-Path -Parent $targetPath
+    New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+    $bitmap.Save($targetPath, [System.Drawing.Imaging.ImageFormat]::Png)
+  }
   $bitmap.Dispose()
+}
+
+function Save-AndroidLauncherIcons {
+  $densities = @{
+    "mipmap-mdpi" = 48
+    "mipmap-hdpi" = 72
+    "mipmap-xhdpi" = 96
+    "mipmap-xxhdpi" = 144
+    "mipmap-xxxhdpi" = 192
+  }
+
+  foreach ($density in $densities.GetEnumerator()) {
+    $directory = Join-Path $root ("android\app\src\main\res\" + $density.Key)
+    New-Item -ItemType Directory -Force -Path $directory | Out-Null
+
+    foreach ($name in @("ic_launcher.png", "ic_launcher_round.png")) {
+      $bitmap = New-Object System.Drawing.Bitmap $density.Value, $density.Value
+      $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+      $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+      $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+      $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+      $graphics.Clear([System.Drawing.Color]::Transparent)
+      $graphics.DrawImage($source, 0, 0, $density.Value, $density.Value)
+      $graphics.Dispose()
+      $bitmap.Save((Join-Path $directory $name), [System.Drawing.Imaging.ImageFormat]::Png)
+      $bitmap.Dispose()
+    }
+  }
 }
 
 Save-Png 192 "public\icons\android\icon-192x192.png"
@@ -69,6 +103,7 @@ Save-Png 1024 "public\icons\ios\icon-1024x1024.png"
 Save-Png 512 "public\android-chrome-512x512.png"
 Save-Png 32 "public\favicon.png"
 Save-NotificationIcon
+Save-AndroidLauncherIcons
 
 # Create a standards-compliant ICO containing the official 32x32 PNG.
 $faviconPngPath = Join-Path $root "public\favicon.png"

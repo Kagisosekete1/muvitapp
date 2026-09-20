@@ -10,6 +10,11 @@ const DEFAULT_ONESIGNAL_APP_ID = "0b049171-0951-40ba-b90e-38fe7e06ae21";
 const APP_ICON_URL =
   Deno.env.get("APP_ICON_URL") ||
   "https://muvit.site/icons/android/icon-192x192.png";
+// Android Chrome rejects coloured square artwork for the small web-push badge.
+// This is the transparent alpha-mask version of Muv'it's actual M mark.
+const APP_BADGE_URL =
+  Deno.env.get("APP_BADGE_URL") ||
+  "https://muvit.site/icons/onesignal/muvit-badge.png";
 const APP_BANNER_URL =
   Deno.env.get("APP_BANNER_URL") ||
   "https://muvit.site/muvit-notification-banner.png";
@@ -320,15 +325,6 @@ serve(async (req) => {
         continue;
       }
 
-      const { data: subscriptions } = await supabase
-        .from("push_subscriptions")
-        .select("subscription_id")
-        .eq("user_id", payload.userId)
-        .eq("provider", "onesignal")
-        .eq("is_active", true)
-        .neq("permission_status", "denied");
-
-      const subscriptionIds = [...new Set((subscriptions || []).map((s: any) => s.subscription_id).filter(Boolean))];
       let pushStatus = "not_sent";
       let pushError: string | null = null;
       let providerResponse: unknown = null;
@@ -336,9 +332,12 @@ serve(async (req) => {
       if (oneSignalRestKey && oneSignalAppId) {
         const notification = {
           app_id: oneSignalAppId,
-          ...(subscriptionIds.length
-            ? { include_subscription_ids: subscriptionIds }
-            : { include_aliases: { external_id: [payload.userId] } }),
+          // Always target the OneSignal external id set by loginOneSignalUser.
+          // A stored subscription-id list can be stale or incomplete (notably
+          // while Android Chrome finishes creating an installed-PWA push
+          // subscription), which otherwise prevents the phone from receiving
+          // a notification when another device is already in the table.
+          include_aliases: { external_id: [payload.userId] },
           target_channel: "push",
           headings: { en: title },
           contents: { en: body },
@@ -351,7 +350,7 @@ serve(async (req) => {
           // Chrome on Android uses this value for the small icon at the left
           // of a web-push notification. Without it, OneSignal falls back to
           // its bell badge even when chrome_web_icon is set.
-          chrome_web_badge: APP_ICON_URL,
+          chrome_web_badge: APP_BADGE_URL,
           chrome_web_image: activityImage,
           data: {
             type: payload.type,
