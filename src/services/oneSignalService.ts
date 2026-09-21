@@ -282,7 +282,9 @@ async function syncPlayerIdWithBackend(playerId: string | null | undefined, user
         subscription_id: playerId,
         platform: getPlatform(),
         permission_status: permissionStatus,
-        is_active: true,
+        // A denied browser/OS permission is never a deliverable endpoint.
+        // Keeping it active caused server pushes to target old phone records.
+        is_active: permissionStatus !== 'denied',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,device_id,provider' });
 
@@ -382,7 +384,7 @@ export async function loginOneSignalUser(userId: string) {
         await markCurrentDeviceInactive();
       }
       pushSubscription?.addEventListener?.('change', (evt: any) => {
-        const newId = evt?.current?.id;
+        const newId = evt?.current?.id || evt?.current?.subscriptionId;
         if (newId) {
           getNativeSubscriptionStatus(plugin).then((status) => syncPlayerIdWithBackend(newId, userId, status));
         }
