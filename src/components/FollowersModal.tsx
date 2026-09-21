@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
-import { sendFollowNotification } from '@/services/notificationService';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -167,8 +166,6 @@ const FollowersModal: React.FC<FollowersModalProps> = ({
         variant: 'destructive',
       });
     } else {
-      // Send notification
-      void sendFollowNotification(user.id, authUser.id);
       toast({ title: 'Following', description: `You are now following @${user.username}` });
       
       // Update parent count if following list

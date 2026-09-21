@@ -21,7 +21,6 @@ import FloatingCommentBubble from '@/components/ui/FloatingCommentBubble';
 import EditReelModal from '@/components/EditReelModal';
 import ProfileLink from '@/components/ui/ProfileLink';
 import DoubleTapLikeAnimation from '@/components/ui/DoubleTapLikeAnimation';
-import { sendLikeNotification, sendRepostNotification } from '@/services/notificationService';
 import { useOfflineVideoCache } from '@/hooks/useOfflineVideoCache';
 import VideoAnalyticsModal from '@/components/VideoAnalyticsModal';
 import { useWatchTimeTracker } from '@/hooks/useWatchTimeTracker';
@@ -678,9 +677,6 @@ const ReelCard: React.FC<ReelCardProps> = ({
           return;
         }
 
-        if (!error && reel.user.id !== authUser.id) {
-          void sendLikeNotification(reel.user.id, authUser.id, reel.id);
-        }
       }
     }
   };
@@ -772,10 +768,6 @@ const ReelCard: React.FC<ReelCardProps> = ({
         
         await supabase.from('likes').insert({ user_id: authUser.id, reel_id: reel.id });
         
-        // Send push + create in-app notification via backend (prevents duplicates)
-        if (reel.user.id !== authUser.id) {
-          void sendLikeNotification(reel.user.id, authUser.id, reel.id);
-        }
       } else {
         await supabase.from('likes').delete().eq('user_id', authUser.id).eq('reel_id', reel.id);
       }
@@ -854,9 +846,6 @@ const ReelCard: React.FC<ReelCardProps> = ({
         console.error('Error reposting Muv:', error);
         toast({ title: 'Could not repost', variant: 'destructive' });
         return;
-      }
-      if (!error && reel.user.id !== authUser.id) {
-        void sendRepostNotification(reel.user.id, authUser.id, reel.id);
       }
       toast({ title: 'Reposted!' });
     }

@@ -29,7 +29,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { sendFollowNotification } from '@/services/notificationService';
 
 interface UserProfileData {
   id: string;
@@ -311,7 +310,6 @@ const UserProfile = () => {
       }
 
       // Send in-app + push via backend (prevents duplicates)
-      if (!error) void sendFollowNotification(user.user_id, authUser.id);
     }
 
     toast({ title: 'Following', description: `You are now following @${user.username}` });

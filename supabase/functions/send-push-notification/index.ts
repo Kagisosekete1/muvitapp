@@ -187,6 +187,17 @@ serve(async (req) => {
     if (prefs && (prefs as any).push_enabled === false) return json({ success: true, skipped: "push-disabled" });
     if (prefs && prefField && (prefs as any)[prefField] === false) return json({ success: true, skipped: "type-disabled" });
 
+    const { data: subscriptions } = await supabase
+      .from("push_subscriptions")
+      .select("subscription_id")
+      .eq("user_id", payload.userId)
+      .eq("provider", "onesignal")
+      .eq("is_active", true)
+      .neq("permission_status", "denied");
+    const subscriptionIds = [...new Set(
+      (subscriptions || []).map((item: { subscription_id: string | null }) => item.subscription_id).filter(Boolean),
+    )] as string[];
+
     const { data: fromUser } = await supabase
       .from("profiles")
       .select("username, display_name, avatar_url")
@@ -265,10 +276,9 @@ serve(async (req) => {
 
       const notification = {
         app_id: oneSignalAppId,
-        // Route through the Muv'it user identity so every logged-in device,
-        // including an Android installed PWA, is included in the fan-out.
-        include_aliases: { external_id: [payload.userId] },
-        target_channel: "push",
+        ...(subscriptionIds.length > 0
+          ? { include_subscription_ids: subscriptionIds }
+          : { include_aliases: { external_id: [payload.userId] }, target_channel: "push" }),
         headings: { en: title },
         contents: { en: body },
         large_icon: senderAvatar,

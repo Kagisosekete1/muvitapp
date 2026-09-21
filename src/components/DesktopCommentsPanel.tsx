@@ -7,7 +7,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import ProfileLink from '@/components/ui/ProfileLink';
-import { sendCommentNotification, sendCommentReplyNotification } from '@/services/notificationService';
 import MentionInput from '@/components/ui/MentionInput';
 import { notifyMentions } from '@/lib/mentions';
 
@@ -178,18 +177,6 @@ const DesktopCommentsPanel: React.FC<DesktopCommentsPanelProps> = ({
         .update({ comments_count: (reel?.comments_count || 0) + 1 })
         .eq('id', reelId);
 
-      // Send notifications
-      const ownerId = reelOwnerId || reel?.user_id;
-      
-      // If this is a reply, notify the original commenter
-      if (savedReplyingTo && savedReplyingTo.userId !== authUser.id) {
-        void sendCommentReplyNotification(savedReplyingTo.userId, authUser.id, reelId, commentText);
-      }
-      
-      // Also notify reel owner if different from replier and original commenter
-      if (ownerId && ownerId !== authUser.id && (!savedReplyingTo || ownerId !== savedReplyingTo.userId)) {
-        void sendCommentNotification(ownerId, authUser.id, reelId, commentText);
-      }
       
       setTimeout(() => {
         commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });

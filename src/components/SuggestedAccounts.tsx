@@ -7,7 +7,6 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
-import { sendFollowNotification } from '@/services/notificationService';
 
 interface SuggestedProfile {
   id: string;
@@ -168,7 +167,6 @@ const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
         });
 
         setAccounts(prev => prev.filter(account => account.user_id !== userId));
-        sendFollowNotification(userId, authUser.id);
       }
     } catch (error) {
       // Revert on error

@@ -7,7 +7,6 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
-import { sendFollowNotification } from '@/services/notificationService';
 import { BottomNavigation } from '@/components/BottomNavigation';
 
 interface SuggestedProfile {
@@ -131,7 +130,6 @@ const SuggestedMuvaz = () => {
           following_id: userId,
         });
 
-        sendFollowNotification(userId, authUser.id);
       }
     } catch (error) {
       setFollowingIds(prev => {

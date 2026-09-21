@@ -325,6 +325,17 @@ serve(async (req) => {
         continue;
       }
 
+      const { data: subscriptions } = await supabase
+        .from("push_subscriptions")
+        .select("subscription_id")
+        .eq("user_id", payload.userId)
+        .eq("provider", "onesignal")
+        .eq("is_active", true)
+        .neq("permission_status", "denied");
+      const subscriptionIds = [...new Set(
+        (subscriptions || []).map((item: { subscription_id: string | null }) => item.subscription_id).filter(Boolean),
+      )] as string[];
+
       let pushStatus = "not_sent";
       let pushError: string | null = null;
       let providerResponse: unknown = null;
@@ -335,13 +346,11 @@ serve(async (req) => {
         const collapseId = notificationId;
         const notification = {
           app_id: oneSignalAppId,
-          // Always target the OneSignal external id set by loginOneSignalUser.
-          // A stored subscription-id list can be stale or incomplete (notably
-          // while Android Chrome finishes creating an installed-PWA push
-          // subscription), which otherwise prevents the phone from receiving
-          // a notification when another device is already in the table.
-          include_aliases: { external_id: [payload.userId] },
-          target_channel: "push",
+          // Subscription IDs are the authoritative delivery route while a PWA
+          // subscription is still waiting for OneSignal external-id linking.
+          ...(subscriptionIds.length > 0
+            ? { include_subscription_ids: subscriptionIds }
+            : { include_aliases: { external_id: [payload.userId] }, target_channel: "push" }),
           headings: { en: title },
           contents: { en: body },
           // Android requires a local monochrome small icon. The native M mark
