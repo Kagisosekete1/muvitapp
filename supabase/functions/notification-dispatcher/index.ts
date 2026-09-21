@@ -354,7 +354,6 @@ serve(async (req) => {
           // of a web-push notification. Without it, OneSignal falls back to
           // its bell badge even when chrome_web_icon is set.
           chrome_web_badge: APP_BADGE_URL,
-          chrome_web_image: activityImage,
           collapse_id: collapseId,
           android_group: "muvit-activity",
           android_group_message: { en: "$[notif_count] new Muv'it notifications" },

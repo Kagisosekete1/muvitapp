@@ -275,7 +275,6 @@ serve(async (req) => {
         chrome_web_icon: APP_ICON_URL,
         firefox_icon: APP_ICON_URL,
         big_picture: activityImage,
-        chrome_web_image: activityImage,
         small_icon: "ic_stat_onesignal_default",
         chrome_web_badge: APP_BADGE_URL,
         collapse_id: collapseId,
