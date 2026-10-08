@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/contexts/UserContext';
 import { getVideoDuration, uploadBattleVideo } from '@/lib/battleUtils';
 import type { Battle, BattleProfile } from '@/types/battle';
+import BattleVideoSurface from './BattleVideoSurface';
 
 interface BattleUploadDialogProps {
   open: boolean;
@@ -222,7 +223,7 @@ const BattleUploadDialog: React.FC<BattleUploadDialogProps> = ({ open, onOpenCha
 
             {previewUrl && (
               <div className="relative rounded-2xl overflow-hidden bg-video aspect-[9/16] max-h-72 mx-auto">
-                <video src={previewUrl} className="w-full h-full object-contain" controls playsInline />
+                <BattleVideoSurface videoUrl={previewUrl} label="battle upload preview" />
                 <button type="button" onClick={() => setFile(null)} className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur-md">
                   <X className="w-4 h-4" />
                 </button>

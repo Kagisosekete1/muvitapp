@@ -149,7 +149,10 @@ const Battles = () => {
                 {thumb ? (
                   <img src={thumb as string} alt={`${(profile as BattleProfile | null)?.username || side} battle`} className="w-full h-full object-cover" loading="lazy" />
                 ) : video ? (
-                  <video src={video as string} className="w-full h-full object-cover" muted playsInline />
+                  <div className="h-full flex flex-col items-center justify-center bg-secondary text-muted-foreground gap-2 p-3 text-center">
+                    <Upload className="w-6 h-6" />
+                    <span className="text-xs font-medium">Preparing preview</span>
+                  </div>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
                     <Upload className="w-7 h-7" />

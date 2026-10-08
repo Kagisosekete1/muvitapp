@@ -11,6 +11,7 @@ import { useUser } from '@/contexts/UserContext';
 import { formatBattleTimeLeft, isBattleActive } from '@/lib/battleUtils';
 import type { Battle, BattleSide } from '@/types/battle';
 import BattleUploadDialog from './BattleUploadDialog';
+import BattleVideoSurface from './BattleVideoSurface';
 
 interface BattleDetailDialogProps {
   battle: Battle | null;
@@ -113,6 +114,7 @@ const BattleDetailDialog: React.FC<BattleDetailDialogProps> = ({ battle, open, o
     const isChallenger = side === 'challenger';
     const profile = isChallenger ? current.challenger : current.opponent;
     const videoUrl = isChallenger ? current.challenger_video_url : current.opponent_video_url;
+    const thumbnailUrl = isChallenger ? current.challenger_thumbnail_url : current.opponent_thumbnail_url;
     const caption = isChallenger ? current.challenger_caption : current.opponent_caption;
     const votes = isChallenger ? current.challenger_votes : current.opponent_votes;
     const percent = isChallenger ? challengerPercent : opponentPercent;
@@ -121,14 +123,11 @@ const BattleDetailDialog: React.FC<BattleDetailDialogProps> = ({ battle, open, o
     return (
       <div className="min-w-0 flex-1 space-y-2">
         <div className={`relative aspect-[9/16] overflow-hidden rounded-2xl bg-video ${won ? 'ring-2 ring-primary' : ''}`}>
-          {videoUrl ? (
-            <video src={videoUrl} className="w-full h-full object-cover" controls playsInline loop />
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center p-4 text-center text-muted-foreground">
-              <Upload className="w-8 h-8 mb-2" />
-              <span className="text-xs">Waiting</span>
-            </div>
-          )}
+          <BattleVideoSurface
+            videoUrl={videoUrl}
+            posterUrl={thumbnailUrl}
+            label={`${profile?.username || side}'s battle Muv`}
+          />
           {won && (
             <div className="absolute top-2 left-2 rounded-full bg-primary text-primary-foreground px-2 py-1 text-xs font-bold flex items-center gap-1">
               <Trophy className="w-3 h-3" /> Winner
