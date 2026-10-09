@@ -72,7 +72,9 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
     };
 
     const captureAt = (time: number) => new Promise<string>((resolve, reject) => {
+      let timeout: ReturnType<typeof window.setTimeout> | undefined;
       const done = () => {
+        if (timeout) window.clearTimeout(timeout);
         try {
           canvas.width = video.videoWidth || 720;
           canvas.height = video.videoHeight || 1280;
@@ -86,7 +88,13 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
       video.onseeked = done;
       video.onerror = () => reject(new Error('Could not load this Muv for cover selection.'));
       try {
-        video.currentTime = Math.min(Math.max(time, 0), Math.max((video.duration || 1) - 0.1, 0));
+        const targetTime = Math.min(Math.max(time, 0.05), Math.max((video.duration || 1) - 0.1, 0.05));
+        if (Math.abs(video.currentTime - targetTime) < 0.02) {
+          window.requestAnimationFrame(done);
+        } else {
+          video.currentTime = targetTime;
+        }
+        timeout = window.setTimeout(() => reject(new Error('Timed out while selecting a cover frame.')), 5000);
       } catch {
         done();
       }
@@ -96,11 +104,16 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
       if (!ctx) return;
       setThumbnailLoading(true);
       try {
-        video.crossOrigin = 'anonymous';
-        video.preload = 'metadata';
+        // Capturing from a blob makes the video same-origin for canvas. Direct
+        // remote URLs are often blocked by Android WebView and show black frames.
+        const response = await fetch(reel.videoUrl);
+        if (!response.ok) throw new Error('Could not download this Muv for cover selection.');
+        const videoBlob = await response.blob();
+        objectUrl = URL.createObjectURL(videoBlob);
+        video.preload = 'auto';
         video.muted = true;
         video.playsInline = true;
-        video.src = reel.videoUrl;
+        video.src = objectUrl;
 
         await new Promise<void>((resolve, reject) => {
           video.onloadedmetadata = () => resolve();
@@ -108,7 +121,7 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
         });
 
         const duration = Number.isFinite(video.duration) ? video.duration : 1;
-        const times = [1, duration * 0.33, duration * 0.66, Math.max(duration - 1, 1)];
+        const times = [duration * 0.1, duration * 0.35, duration * 0.65, duration * 0.9];
         for (const time of times) {
           if (cancelled) return;
           generated.push(await captureAt(time));
@@ -120,6 +133,13 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
         }
       } catch (error) {
         logVideoLoadError('could not generate edit thumbnails', reel.videoUrl, error);
+        if (!cancelled) {
+          toast({
+            title: 'Choose a cover image',
+            description: 'We could not read frames from this video. Upload any photo for the cover instead.',
+            variant: 'destructive',
+          });
+        }
       } finally {
         if (!cancelled) setThumbnailLoading(false);
         cleanup();
@@ -132,7 +152,7 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
       cancelled = true;
       cleanup();
     };
-  }, [isOpen, reel?.videoUrl]);
+  }, [isOpen, reel?.videoUrl, toast]);
 
   const uploadSelectedThumbnail = async () => {
     if (!reel || !authUser) {
@@ -260,8 +280,15 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
               <ImagePlus className="w-4 h-4 mr-2" />
               Upload image cover
             </Button>
-            <div className="grid grid-cols-4 gap-2">
-              {Array.from({ length: 4 }).map((_, index) => (
+            {thumbnailLoading ? (
+              <div className="grid grid-cols-4 gap-2" aria-label="Loading cover choices">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <span key={index} className="aspect-[9/16] rounded-lg bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : thumbnailOptions.length > 0 ? (
+              <div className="grid grid-cols-4 gap-2">
+              {thumbnailOptions.map((thumbnail, index) => (
                 <button
                   key={index}
                   type="button"
@@ -271,7 +298,7 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
                   onClick={() => setSelectedThumbnailIndex(index)}
                   disabled={!thumbnailOptions[index]}
                 >
-                  {thumbnailOptions[index] ? (
+                  {thumbnail ? (
                     <img
                       src={thumbnailOptions[index]}
                       alt={`Cover option ${index + 1}`}
@@ -282,7 +309,10 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
                   )}
                 </button>
               ))}
-            </div>
+              </div>
+            ) : (
+              <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">Upload an image to choose a cover for this Muv.</p>
+            )}
           </div>
 
           <div className="space-y-2">

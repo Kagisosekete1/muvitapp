@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface ProfileLinkProps {
   username: string;
@@ -57,10 +58,20 @@ const ProfileLink: React.FC<ProfileLinkProps> = ({
     <>
       {trigger}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="w-[min(22rem,calc(100vw-2rem))] rounded-2xl border-white/15 bg-background/95 p-0 shadow-2xl backdrop-blur-xl">
-          <div className="relative overflow-hidden px-5 pb-5 pt-7 text-center">
-            <div className="absolute inset-x-0 top-0 h-20 bg-primary/15" />
-            <div className="relative mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-primary/15 shadow-lg">
+        <DialogContent className="w-[min(21rem,calc(100vw-2rem))] rounded-3xl border-white/15 bg-background/95 p-0 shadow-2xl backdrop-blur-2xl [&>button:last-child]:hidden">
+          <div className="relative overflow-hidden px-5 pb-5 pt-8 text-center">
+            <div className="absolute inset-x-0 top-0 h-24 bg-primary/15" />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-3 top-3 z-10 h-8 w-8 rounded-full bg-black/35 text-white hover:bg-black/55"
+              onClick={() => setIsPreviewOpen(false)}
+              aria-label="Close profile preview"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <div className="relative mx-auto flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-primary/15 shadow-xl">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={displayName || username} className="h-full w-full object-cover" />
               ) : (

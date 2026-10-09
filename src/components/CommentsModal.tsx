@@ -397,7 +397,12 @@ const CommentsModal: React.FC<CommentsModalProps> = ({
                 key={comment.id} 
                 className={`flex gap-3 animate-fade-in ${comment.reply_to_id ? 'ml-8' : ''}`}
               >
-                <ProfileLink username={comment.profile?.username || 'user'}>
+                <ProfileLink
+                  username={comment.profile?.username || 'user'}
+                  displayName={comment.profile?.display_name || comment.profile?.username}
+                  avatarUrl={comment.profile?.avatar_url || undefined}
+                  preview
+                >
                   <img
                     src={comment.profile?.avatar_url || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=120&h=120&fit=crop&crop=face'}
                     alt={comment.profile?.username || 'User'}

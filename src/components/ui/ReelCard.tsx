@@ -1310,7 +1310,12 @@ const ReelCard: React.FC<ReelCardProps> = ({
           <div className="space-y-1.5 sm:space-y-2">
             <div className="flex items-center gap-2">
               {/* User Avatar */}
-              <ProfileLink username={reel.user.username}>
+              <ProfileLink
+                username={reel.user.username}
+                displayName={reel.user.displayName}
+                avatarUrl={reel.user.avatarUrl}
+                preview
+              >
                 <img
                   src={reel.user.avatarUrl || '/placeholder.svg'}
                   alt={reel.user.username}
@@ -1350,7 +1355,12 @@ const ReelCard: React.FC<ReelCardProps> = ({
         <div className={actionRailClassName} style={{ opacity: 0.85 }}>
           {/* User Avatar with Follow Button */}
           <div className="relative mb-1">
-            <ProfileLink username={reel.user.username}>
+            <ProfileLink
+              username={reel.user.username}
+              displayName={reel.user.displayName}
+              avatarUrl={reel.user.avatarUrl}
+              preview
+            >
               <img
                 src={reel.user.avatarUrl}
                 alt={reel.user.username}
