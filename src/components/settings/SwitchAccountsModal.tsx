@@ -152,7 +152,7 @@ const SwitchAccountsModal: React.FC<SwitchAccountsModalProps> = ({ isOpen, onClo
               <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-card border border-border">
                 <div>
                   <p className="text-sm font-medium text-foreground">Save Login</p>
-                  <p className="text-xs text-muted-foreground">Remember this session when switching</p>
+                  <p className="text-xs text-muted-foreground">Switch back without entering your password again</p>
                 </div>
                 <Switch checked={saveLogin} onCheckedChange={setSaveLogin} />
               </div>
@@ -269,7 +269,7 @@ const SwitchAccountsModal: React.FC<SwitchAccountsModalProps> = ({ isOpen, onClo
 
           {/* Info */}
           <p className="text-xs text-muted-foreground text-center pt-2">
-            You can save up to 4 accounts. Turn on "Save Login" to switch without re-entering your password.
+            Saved accounts use a secure sign-in session, never your password. You can save up to 4 accounts.
           </p>
         </div>
       </DialogContent>

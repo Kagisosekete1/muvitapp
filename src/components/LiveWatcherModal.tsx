@@ -676,6 +676,9 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
                     autoPlay
                     playsInline
                     muted
+                    data-reel-video="true"
+                    disablePictureInPicture
+                    controlsList="nodownload nofullscreen noremoteplayback"
                     aria-hidden="true"
                     className={hasVideo ? 'opacity-100' : 'opacity-0'}
                     style={remoteBackdropStyle}
@@ -685,6 +688,9 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
                   ref={remoteVideoRef}
                   autoPlay
                   playsInline
+                  data-reel-video="true"
+                  disablePictureInPicture
+                  controlsList="nodownload nofullscreen noremoteplayback"
                   className={hasVideo ? 'opacity-100' : 'opacity-0'}
                   style={remoteVideoStyle}
                 />
@@ -705,7 +711,7 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
             )}
 
             {/* Top stats bar */}
-            <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+            <div className="absolute left-3 right-3 top-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between z-10">
               <div className="flex items-center gap-1.5">
                 <div className="bg-pink-500 px-2.5 py-1 rounded-full flex items-center gap-1">
                   <Radio className="w-3 h-3 text-white animate-pulse" />
@@ -761,13 +767,13 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
             </div>
 
             {/* Stream Title */}
-            <div className="absolute top-12 left-3 right-3 z-10">
+            <div className="absolute left-3 right-3 top-[calc(3.25rem+env(safe-area-inset-top))] z-10">
               <p className="text-white font-medium text-sm text-center truncate">{liveStream.title}</p>
             </div>
 
             {/* Pinned Message */}
             {pinnedMessage && (
-              <div className="absolute top-20 left-0 right-0 z-10">
+              <div className="absolute left-0 right-0 top-[calc(5.25rem+env(safe-area-inset-top))] z-10">
                 <PinnedMessage
                   username={pinnedMessage.username}
                   content={pinnedMessage.content}
@@ -794,7 +800,12 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
                   className="flex items-start gap-1.5 animate-fade-in group"
                   onDoubleClick={() => handlePinMessage(comment)}
                 >
-                  <ProfileLink username={comment.username}>
+                  <ProfileLink
+                    username={comment.username}
+                    displayName={comment.username}
+                    avatarUrl={comment.avatarUrl}
+                    preview
+                  >
                     <img
                       src={comment.avatarUrl || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face'}
                       alt={comment.username}

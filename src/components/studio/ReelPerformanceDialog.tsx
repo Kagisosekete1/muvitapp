@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Eye, Heart, MessageCircle, Share2, TrendingUp, Clock } from 'lucide-react';
+import { Eye, Heart, MessageCircle, Share2, TrendingUp, Clock, ImagePlus } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import {
@@ -26,6 +26,7 @@ interface ReelPerformanceDialogProps {
   allReels: StudioReelAnalytics[];
   isOpen: boolean;
   onClose: () => void;
+  onChangeCover: (reelId: string) => void;
   reel: StudioReelAnalytics | null;
 }
 
@@ -46,7 +47,7 @@ const toRate = (numerator: number, denominator: number) => {
   return Number(((numerator / denominator) * 100).toFixed(2));
 };
 
-const ReelPerformanceDialog = ({ allReels, isOpen, onClose, reel }: ReelPerformanceDialogProps) => {
+const ReelPerformanceDialog = ({ allReels, isOpen, onClose, onChangeCover, reel }: ReelPerformanceDialogProps) => {
   const analytics = useMemo(() => {
     if (!reel) return null;
 
@@ -105,20 +106,28 @@ const ReelPerformanceDialog = ({ allReels, isOpen, onClose, reel }: ReelPerforma
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-4 md:grid-cols-[180px,1fr]">
-              <div className="overflow-hidden rounded-2xl border border-border/60 bg-secondary/20">
+            <div className="grid gap-4 md:grid-cols-[148px,1fr]">
+              <div className="mx-auto w-full max-w-[148px] overflow-hidden rounded-2xl border border-border/60 bg-secondary/20">
                 {reel.thumbnail_url ? (
                   <img
                     src={reel.thumbnail_url}
                     alt={`Thumbnail for ${reel.title}`}
                     loading="lazy"
-                    className="h-full w-full object-cover"
+                    className="aspect-[9/16] h-auto w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full min-h-[240px] items-center justify-center bg-secondary/30 px-6 text-center text-sm text-muted-foreground">
-                    Add a portrait thumbnail in Studio to brand this Muv.
+                  <div className="flex aspect-[9/16] items-center justify-center bg-secondary/30 px-4 text-center text-xs text-muted-foreground">
+                    No cover selected
                   </div>
                 )}
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-center gap-1.5 border-t border-border/60 px-2 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                  onClick={() => onChangeCover(reel.id)}
+                >
+                  <ImagePlus className="h-3.5 w-3.5" />
+                  Change cover
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

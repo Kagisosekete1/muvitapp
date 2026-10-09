@@ -1664,6 +1664,9 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
                           autoPlay
                           playsInline
                           muted
+                          data-reel-video="true"
+                          disablePictureInPicture
+                          controlsList="nodownload nofullscreen noremoteplayback"
                           webkit-playsinline="true"
                           className="w-full h-full object-contain"
                           style={cameraVideoStyle}
@@ -1988,6 +1991,9 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
                     autoPlay
                     playsInline
                     muted
+                    data-reel-video="true"
+                    disablePictureInPicture
+                    controlsList="nodownload nofullscreen noremoteplayback"
                     className="w-full h-full object-contain"
                     style={cameraVideoStyle}
                   />
@@ -2006,7 +2012,7 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
 
             {/* Top Bar - compact */}
-            <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/50 to-transparent z-10">
+            <div className="absolute top-0 left-0 right-0 p-3 pt-[calc(0.75rem+env(safe-area-inset-top))] bg-gradient-to-b from-black/50 to-transparent z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <div className="relative">

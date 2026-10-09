@@ -163,10 +163,11 @@ const Studio = () => {
 
       const { data: urlData } = supabase.storage.from('reels').getPublicUrl(filePath);
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('reels')
         .update({ thumbnail_url: urlData.publicUrl })
         .eq('id', reelId);
+      if (updateError) throw updateError;
 
       setReels(prev => prev.map(r => r.id === reelId ? { ...r, thumbnail_url: urlData.publicUrl } : r));
 
@@ -389,6 +390,10 @@ const Studio = () => {
               <ReelPerformanceDialog
                 isOpen={Boolean(selectedReel)}
                 onClose={() => setSelectedReelId(null)}
+                onChangeCover={(reelId) => {
+                  setUploadingThumbnail(reelId);
+                  fileInputRef.current?.click();
+                }}
                 reel={selectedReel}
                 allReels={reels}
               />
