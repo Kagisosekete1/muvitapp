@@ -96,17 +96,17 @@ const ReelPerformanceDialog = ({ allReels, isOpen, onClose, onChangeCover, reel 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-3xl border-border/60 bg-background p-0 sm:max-w-3xl">
+      <DialogContent className="max-h-[calc(100dvh-1rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-[calc(100vw-1rem)] max-w-md overflow-x-hidden overflow-y-auto rounded-2xl border-border/60 bg-background p-0 sm:max-w-3xl">
         {reel && analytics ? (
-          <div className="space-y-6 p-4 sm:p-6">
+          <div className="min-w-0 space-y-5 p-3 sm:p-6">
             <DialogHeader className="space-y-2 text-left">
-              <DialogTitle className="text-xl font-bold">{reel.title}</DialogTitle>
+              <DialogTitle className="break-words pr-8 text-lg font-bold sm:text-xl">{reel.title}</DialogTitle>
               <DialogDescription>
                 Detailed analytics for this Muv with a quick benchmark against your channel average.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-4 md:grid-cols-[148px,1fr]">
+            <div className="grid min-w-0 gap-4 md:grid-cols-[148px,minmax(0,1fr)]">
               <div className="mx-auto w-full max-w-[148px] overflow-hidden rounded-2xl border border-border/60 bg-secondary/20">
                 {reel.thumbnail_url ? (
                   <img
@@ -130,43 +130,43 @@ const ReelPerformanceDialog = ({ allReels, isOpen, onClose, onChangeCover, reel 
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+              <div className="grid min-w-0 grid-cols-2 gap-2">
+                <div className="min-w-0 rounded-xl border border-border/60 bg-secondary/20 p-3">
                   <div className="mb-2 flex items-center gap-2 text-muted-foreground">
                     <Eye className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-medium uppercase tracking-[0.18em]">Views</span>
+                    <span className="text-[10px] font-medium uppercase tracking-[0.08em]">Views</span>
                   </div>
                   <p className="text-2xl font-bold">{formatNumber(reel.views_count || 0)}</p>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+                <div className="min-w-0 rounded-xl border border-border/60 bg-secondary/20 p-3">
                   <div className="mb-2 flex items-center gap-2 text-muted-foreground">
                     <TrendingUp className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-medium uppercase tracking-[0.18em]">Engagement</span>
+                    <span className="text-[10px] font-medium uppercase tracking-[0.08em]">Engagement</span>
                   </div>
                   <p className="text-2xl font-bold">{analytics.engagementRate}%</p>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+                <div className="min-w-0 rounded-xl border border-border/60 bg-secondary/20 p-3">
                   <div className="mb-2 flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-medium uppercase tracking-[0.18em]">Watch hours</span>
+                    <span className="text-[10px] font-medium uppercase tracking-[0.08em]">Watch hours</span>
                   </div>
                   <p className="text-2xl font-bold">{formatNumber(analytics.watchHours)}</p>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+                <div className="min-w-0 rounded-xl border border-border/60 bg-secondary/20 p-3">
                   <div className="mb-2 flex items-center gap-2 text-muted-foreground">
                     <Share2 className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-medium uppercase tracking-[0.18em]">Published</span>
+                    <span className="text-[10px] font-medium uppercase tracking-[0.08em]">Published</span>
                   </div>
                   <p className="text-sm font-semibold">{analytics.publishedLabel}</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
-              <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-border/60 bg-secondary/20 p-3">
+              <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <div>
                   <h3 className="text-sm font-semibold">Performance vs channel average</h3>
                   <p className="text-xs text-muted-foreground">See how this Muv compares with your usual results.</p>
@@ -174,7 +174,7 @@ const ReelPerformanceDialog = ({ allReels, isOpen, onClose, onChangeCover, reel 
                 <span className="text-[11px] text-muted-foreground">{allReels.length} Muv&apos;z benchmark</span>
               </div>
 
-              <ChartContainer config={chartConfig} className="h-[240px] w-full">
+              <ChartContainer config={chartConfig} className="h-[200px] w-full min-w-0">
                 <BarChart data={analytics.performanceData} barGap={8}>
                   <CartesianGrid vertical={false} />
                   <XAxis dataKey="label" tickLine={false} axisLine={false} />
@@ -186,13 +186,13 @@ const ReelPerformanceDialog = ({ allReels, isOpen, onClose, onChangeCover, reel 
               </ChartContainer>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-secondary/20 p-4">
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-border/60 bg-secondary/20 p-3">
               <div className="mb-4">
                 <h3 className="text-sm font-semibold">Engagement breakdown</h3>
                 <p className="text-xs text-muted-foreground">Rates are calculated from this reel&apos;s own views.</p>
               </div>
 
-              <ChartContainer config={chartConfig} className="h-[220px] w-full">
+              <ChartContainer config={chartConfig} className="h-[190px] w-full min-w-0">
                 <BarChart data={analytics.rateData}>
                   <CartesianGrid vertical={false} />
                   <XAxis dataKey="label" tickLine={false} axisLine={false} />
@@ -202,7 +202,7 @@ const ReelPerformanceDialog = ({ allReels, isOpen, onClose, onChangeCover, reel 
                 </BarChart>
               </ChartContainer>
 
-              <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl border border-border/50 bg-background/60 p-3 text-xs text-muted-foreground">
+              <div className="mt-3 grid grid-cols-1 gap-2 rounded-xl border border-border/50 bg-background/60 p-3 text-xs text-muted-foreground sm:grid-cols-3">
                 <div className="flex items-center gap-2">
                   <Heart className="h-4 w-4 text-primary" />
                   <span>{formatNumber(reel.likes_count || 0)} likes</span>

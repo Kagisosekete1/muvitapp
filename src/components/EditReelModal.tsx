@@ -220,8 +220,8 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px] bg-card border-border rounded-3xl">
-        <DialogHeader className="pb-4 border-b border-border">
+      <DialogContent className="max-h-[calc(100dvh-1rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-[calc(100vw-1rem)] overflow-x-hidden overflow-y-auto rounded-2xl border-border bg-card p-4 sm:max-w-[425px] sm:rounded-3xl">
+        <DialogHeader className="sticky top-0 z-10 -mx-4 -mt-4 border-b border-border bg-card px-4 pb-3 pt-4">
           <DialogTitle className="text-xl font-semibold text-foreground">Edit Muv</DialogTitle>
         </DialogHeader>
 
@@ -271,12 +271,14 @@ const EditReelModal: React.FC<EditReelModalProps> = ({ isOpen, onClose, reel, on
                   onClick={() => setSelectedThumbnailIndex(index)}
                   disabled={!thumbnailOptions[index]}
                 >
-                  {thumbnailOptions[index] && (
+                  {thumbnailOptions[index] ? (
                     <img
                       src={thumbnailOptions[index]}
                       alt={`Cover option ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
+                  ) : (
+                    <span className="block h-full w-full bg-muted" />
                   )}
                 </button>
               ))}

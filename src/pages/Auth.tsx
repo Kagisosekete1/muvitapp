@@ -3,10 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Mail, Lock, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { authSchema, signUpSchema } from '@/lib/validations';
+import { setAutoSavePreference } from '@/hooks/useSavedAccounts';
 import { getSupabaseUserMessage, isSupabaseServiceRestricted, logSupabaseError } from '@/lib/supabaseErrors';
 import muvitLogo from '@/assets/muvit-logo.png';
 
@@ -25,6 +27,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [showConfirmHelp, setShowConfirmHelp] = useState(false);
+  const [savePassword, setSavePassword] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -115,6 +118,8 @@ const Auth = () => {
           });
         }
       } else {
+        // Save an expiring session after a successful sign-in, never the password.
+        setAutoSavePreference(savePassword);
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -188,7 +193,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
       <div className="w-full max-w-md space-y-8">
         {/* Logo with bounce animation */}
         <div className="text-center space-y-3">
@@ -293,6 +298,17 @@ const Auth = () => {
                 <p className="text-xs text-destructive">{errors.password}</p>
               )}
             </div>
+
+            {!isSignUp && (
+              <label className="flex cursor-pointer items-center gap-2 px-0.5 text-sm text-muted-foreground">
+                <Checkbox
+                  checked={savePassword}
+                  onCheckedChange={(checked) => setSavePassword(checked === true)}
+                  aria-label="Save Password"
+                />
+                <span>Save Password</span>
+              </label>
+            )}
 
             <Button type="submit" className="w-full rounded-xl" disabled={loading}>
               {loading ? 'Please wait...' : (isSignUp ? 'Sign Up' : 'Sign In')}

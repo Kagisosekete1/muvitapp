@@ -166,12 +166,12 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
   const viewerCount = viewers.size;
   const portraitStageStyle: React.CSSProperties = {
     width: isMobile
-      ? '100vw'
+      ? 'min(100vw, calc(100dvh * 9 / 16))'
       : `min(100vw, 420px, calc(100dvh * ${PORTRAIT_STAGE_ASPECT_RATIO}))`,
-    height: isMobile ? '100dvh' : undefined,
-    maxWidth: isMobile ? '100vw' : undefined,
-    maxHeight: isMobile ? '100dvh' : undefined,
-    aspectRatio: isMobile ? undefined : '9 / 16',
+    height: isMobile ? 'min(100dvh, calc(100vw * 16 / 9))' : undefined,
+    maxWidth: '100vw',
+    maxHeight: '100dvh',
+    aspectRatio: '9 / 16',
     // Full-screen stage guard: neutralize any inherited transforms / scaling
     // so a parent container can never reintroduce the horizontal zoomed framing.
     transform: 'none',
@@ -185,7 +185,7 @@ const GoLiveModal: React.FC<GoLiveModalProps> = ({ isOpen, onClose }) => {
     transformOrigin: 'center center',
   };
   const cameraStageClassName = isMobile
-    ? 'fixed inset-0 h-[100dvh] w-screen min-h-[100dvh] min-w-[100vw] overflow-hidden bg-black contain-layout transform-none !transform-none'
+    ? 'relative overflow-hidden bg-black contain-layout transform-none !transform-none'
     : 'relative aspect-[9/16] max-h-[100dvh] overflow-hidden bg-black transform-none';
   const cameraViewportStyle: React.CSSProperties = {
     position: 'absolute',
