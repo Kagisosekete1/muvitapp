@@ -1,4 +1,4 @@
-package com.muvit.app;
+package com.semo.muvitapp;
 
 import com.getcapacitor.BridgeActivity;
 

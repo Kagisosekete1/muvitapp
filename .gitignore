@@ -11,6 +11,7 @@ lerna-debug.log*
 .env.*
 !.env.example
 node_modules
+android/app/google-services.json
 dist
 dist-ssr
 tmp

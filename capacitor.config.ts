@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.muvit.app',
+  appId: 'com.semo.muvitapp',
   appName: "Muv'it",
   webDir: 'dist',
   plugins: {

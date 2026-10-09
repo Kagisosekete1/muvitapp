@@ -22,6 +22,17 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    // Capacitor 7 is compiled with Kotlin 1.9.x. Keep transitive Android
+    // dependencies (including OneSignal) on that compatible runtime instead
+    // of resolving Kotlin 2.2 metadata that the compiler cannot read.
+    configurations.configureEach {
+        resolutionStrategy.force(
+            'org.jetbrains.kotlin:kotlin-stdlib:1.9.25',
+            'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.25',
+            'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.25'
+        )
+    }
 }
 
 task clean(type: Delete) {
