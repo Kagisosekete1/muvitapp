@@ -17,7 +17,6 @@ import {
   ChevronRight,
   LogOut,
   Video,
-  BarChart3,
   Users
 } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
@@ -83,12 +82,6 @@ const Settings = () => {
       label: 'Notifications', 
       description: 'Push notifications, preferences',
       onClick: () => navigate('/settings/notifications')
-    },
-    { 
-      icon: BarChart3, 
-      label: 'Creator Dashboard', 
-      description: 'Stats, earnings, monetization',
-      onClick: () => navigate('/monetization-analytics')
     },
     { 
       icon: Users, 

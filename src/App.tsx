@@ -34,8 +34,6 @@ const SuggestedMuvaz = lazy(() => import("./pages/SuggestedMuvaz"));
 const Trending = lazy(() => import("./pages/Trending"));
 const NotificationPreferencesPage = lazy(() => import("./components/settings/NotificationPreferencesPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const AdminPayouts = lazy(() => import("./pages/AdminPayouts"));
-const MonetizationAnalytics = lazy(() => import("./pages/MonetizationAnalytics"));
 const Settings = lazy(() => import("./pages/Settings"));
 const LiveDiscovery = lazy(() => import("./pages/LiveDiscovery"));
 const Studio = lazy(() => import("./pages/Studio"));
@@ -185,16 +183,8 @@ const AppRoutes = () => {
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/about" element={<About />} />
-        <Route path="/admin/payouts" element={
-          <ProtectedRoute>
-            <AdminPayouts />
-          </ProtectedRoute>
-        } />
-        <Route path="/monetization-analytics" element={
-          <ProtectedRoute>
-            <MonetizationAnalytics />
-          </ProtectedRoute>
-        } />
+        <Route path="/admin/payouts" element={<Navigate to="/" replace />} />
+        <Route path="/monetization-analytics" element={<Navigate to="/studio" replace />} />
         <Route path="/settings" element={
           <ProtectedRoute>
             <Settings />

@@ -18,8 +18,6 @@ import ProfileReelViewer from '@/components/ProfileReelViewer';
 import MilestoneBadges from '@/components/MilestoneBadges';
 import VideoAnalyticsModal from '@/components/VideoAnalyticsModal';
 import CreatorOnboardingModal from '@/components/CreatorOnboardingModal';
-import CreatorDashboardModal from '@/components/CreatorDashboardModal';
-import CreatorProgressWidget from '@/components/CreatorProgressWidget';
 import MobileViewWrapper from '@/components/MobileViewWrapper';
 import MuviiAssistant from '@/components/MuviiAssistant';
 import SwitchAccountsModal from '@/components/settings/SwitchAccountsModal';
@@ -57,7 +55,6 @@ const Profile = () => {
   const [reelsModal, setReelsModal] = useState(false);
   const [badgesModal, setBadgesModal] = useState(false);
   const [creatorOnboardingOpen, setCreatorOnboardingOpen] = useState(false);
-  const [creatorDashboardOpen, setCreatorDashboardOpen] = useState(false);
   const [switchAccountsOpen, setSwitchAccountsOpen] = useState(false);
   const { accounts } = useSavedAccounts();
   const hasMultipleAccounts = accounts.length > 1;
@@ -231,13 +228,6 @@ const Profile = () => {
               </Button>
             </div>
             
-            {/* Creator Progress Widget */}
-            <div className="w-full mt-3">
-              <CreatorProgressWidget 
-                onOpenDashboard={() => setCreatorDashboardOpen(true)} 
-              />
-            </div>
-            
             {/* Creator Onboarding Button */}
             {showOnboardingButton && (
               <Button 
@@ -302,10 +292,6 @@ const Profile = () => {
             setCreatorOnboardingOpen(false);
             checkOnboardingStatus();
           }} 
-        />
-        <CreatorDashboardModal 
-          isOpen={creatorDashboardOpen} 
-          onClose={() => setCreatorDashboardOpen(false)} 
         />
         <NotificationsModal 
           isOpen={isNotificationsOpen} 

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Crown, Swords, Trophy, Upload, Vote } from 'lucide-react';
+import { Swords, Trophy, Upload, Vote } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/contexts/UserContext';
@@ -27,7 +27,7 @@ const BattleDetailDialog: React.FC<BattleDetailDialogProps> = ({ battle, open, o
   const [localBattle, setLocalBattle] = useState<Battle | null>(battle);
   const [busySide, setBusySide] = useState<BattleSide | null>(null);
   const [showResponseUpload, setShowResponseUpload] = useState(false);
-  const [winnerCelebration, setWinnerCelebration] = useState<{ coins: number; isMe: boolean; username: string } | null>(null);
+  const [winnerCelebration, setWinnerCelebration] = useState<{ isMe: boolean; username: string } | null>(null);
 
 
   const getErrorMessage = (error: unknown, fallback: string) =>
@@ -98,7 +98,6 @@ const BattleDetailDialog: React.FC<BattleDetailDialogProps> = ({ battle, open, o
       if (data) setLocalBattle(updated);
       const winnerProfile = updated.winner_side === 'challenger' ? updated.challenger : updated.opponent;
       setWinnerCelebration({
-        coins: updated.bonus_coins,
         isMe: Boolean(authUser && updated.winner_id === authUser.id),
         username: winnerProfile?.username || 'Winner',
       });
@@ -182,8 +181,8 @@ const BattleDetailDialog: React.FC<BattleDetailDialogProps> = ({ battle, open, o
                 <p className="text-xs text-muted-foreground">{statusLabel}</p>
               </div>
               <Badge variant={current.status === 'completed' ? 'default' : 'secondary'} className="shrink-0">
-                {current.status === 'completed' ? <Trophy className="w-3 h-3 mr-1" /> : <Crown className="w-3 h-3 mr-1" />}
-                {current.bonus_coins} coins
+                <Trophy className="w-3 h-3 mr-1" />
+                {current.status === 'completed' ? 'Results' : 'Active'}
               </Badge>
             </div>
 
@@ -238,8 +237,8 @@ const BattleDetailDialog: React.FC<BattleDetailDialogProps> = ({ battle, open, o
               </p>
               <p className="text-sm text-muted-foreground mt-1">
                 {winnerCelebration?.isMe
-                  ? `+${winnerCelebration?.coins} bonus coins added to your balance`
-                  : `Awarded ${winnerCelebration?.coins} bonus coins`}
+                  ? 'Your community chose your moves.'
+                  : 'The community chose the winner.'}
               </p>
             </div>
             <Button className="w-full rounded-2xl" onClick={() => setWinnerCelebration(null)}>

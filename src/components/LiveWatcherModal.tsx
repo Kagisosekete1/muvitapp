@@ -15,6 +15,7 @@ import GiftPanel, { GIFTS, type GiftDefinition } from '@/components/live/GiftPan
 import GiftAnimation from '@/components/live/GiftAnimation';
 import GiftLeaderboard from '@/components/live/GiftLeaderboard';
 import PinnedMessage from '@/components/live/PinnedMessage';
+import { MONETIZATION_ENABLED } from '@/lib/releaseFeatures';
 
 interface LiveWatcherModalProps {
   isOpen: boolean;
@@ -241,7 +242,7 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
 
   // Load coin balance
   useEffect(() => {
-    if (!isOpen || !authUser) return;
+    if (!MONETIZATION_ENABLED || !isOpen || !authUser) return;
     const loadCoins = async () => {
       const { data } = await supabase
         .from('user_coins')
@@ -306,6 +307,7 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
         setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
       })
       .on('broadcast', { event: 'gift' }, ({ payload }) => {
+        if (!MONETIZATION_ENABLED) return;
         const g = payload as { senderName: string; emoji: string; name: string; animation: string; cost: number };
         setGiftAnimation({ id: Date.now(), ...g });
         setTotalGiftCoins(prev => prev + g.cost);
@@ -832,12 +834,12 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
           )}
 
 
-          <GiftPanel
+          {MONETIZATION_ENABLED && <GiftPanel
             isOpen={showGiftPanel}
             onClose={() => setShowGiftPanel(false)}
             coinBalance={coinBalance}
             onSendGift={handleSendGift}
-          />
+          />}
 
           {/* Interaction Bar */}
           <div className="p-3 bg-black/90 flex-shrink-0">
@@ -872,7 +874,7 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
               <Button size="icon" variant="ghost" className="text-white hover:bg-white/10 h-8 w-8" onClick={sendComment} disabled={!canInteract}>
                 <Send className="w-3.5 h-3.5" />
               </Button>
-              {!isOwner && canInteract && (
+              {MONETIZATION_ENABLED && !isOwner && canInteract && (
                 <Button
                   size="icon"
                   variant="ghost"
@@ -900,7 +902,7 @@ const LiveWatcherModal: React.FC<LiveWatcherModalProps> = ({ isOpen, onClose, li
         </div>
 
         {/* Gift leaderboard inline for desktop - compact */}
-        {leaderboard.length > 0 && (
+        {MONETIZATION_ENABLED && leaderboard.length > 0 && (
           <div className="hidden lg:block bg-background border-t border-border p-2 flex-shrink-0">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
               <Trophy className="w-3 h-3 text-yellow-500 flex-shrink-0" />

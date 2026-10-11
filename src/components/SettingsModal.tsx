@@ -12,7 +12,6 @@ import {
   Globe,
   LogOut,
   ChevronRight,
-  DollarSign,
   Wifi,
   HardDrive,
   Bug,
@@ -26,9 +25,7 @@ import PrivacySecurityModal from './settings/PrivacySecurityModal';
 import NotificationsModal from './settings/NotificationsModal';
 import LanguageModal from './settings/LanguageModal';
 import HelpCenterModal from './settings/HelpCenterModal';
-import CreatorDashboardModal from './CreatorDashboardModal';
 import VideoQualityModal from './settings/VideoQualityModal';
-import EarningsModal from './EarningsModal';
 import CachedVideosModal from './settings/CachedVideosModal';
 
 interface SettingsModalProps {
@@ -73,13 +70,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         { icon: User, label: 'Account Information', action: () => setOpenModal('account') },
         { icon: Lock, label: 'Privacy & Security', action: () => setOpenModal('privacy') },
         { icon: Bell, label: 'Notifications', action: () => setOpenModal('notifications') },
-      ],
-    },
-    {
-      title: 'Creator',
-      items: [
-        { icon: DollarSign, label: 'Creator Dashboard & Earnings', action: () => setOpenModal('creator') },
-        { icon: DollarSign, label: 'Earnings & Payouts', action: () => setOpenModal('earnings') },
       ],
     },
     {
@@ -200,8 +190,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       <VideoQualityModal isOpen={openModal === 'video-quality'} onClose={() => setOpenModal(null)} />
       <CachedVideosModal isOpen={openModal === 'cached-videos'} onClose={() => setOpenModal(null)} />
       <HelpCenterModal isOpen={openModal === 'help'} onClose={() => setOpenModal(null)} />
-      <CreatorDashboardModal isOpen={openModal === 'creator'} onClose={() => setOpenModal(null)} />
-      <EarningsModal isOpen={openModal === 'earnings'} onClose={() => setOpenModal(null)} />
     </>
   );
 };
