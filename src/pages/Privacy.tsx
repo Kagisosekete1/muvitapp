@@ -60,7 +60,6 @@ const Privacy = () => {
                 <li>Device and app information such as device type, operating system, app version, browser type, IP address, crash logs, performance information and diagnostics.</li>
                 <li>Approximate or precise location where you allow location access, for features such as nearby Muva'z and local discovery.</li>
                 <li>Notification information such as push tokens, OneSignal subscription IDs, notification preferences, delivery status and unread/read state.</li>
-                <li>Payment, coin, gift, monetization and payout-related information where those features are available.</li>
               </ul>
             </section>
 
@@ -89,7 +88,6 @@ const Privacy = () => {
                 <li>Support messaging, message requests and user interactions.</li>
                 <li>Improve app speed, reliability, safety, moderation and user experience.</li>
                 <li>Detect abuse, spam, fraud, security risks and violations of Muv'it policies.</li>
-                <li>Support creator monetization, gifts, stars, coins, payouts and eligibility checks where available.</li>
                 <li>Comply with legal obligations and respond to valid legal requests.</li>
               </ul>
             </section>
@@ -167,7 +165,7 @@ const Privacy = () => {
                 <li>Delete Muv'z, comments or other content you posted.</li>
                 <li>Control privacy and notification settings.</li>
                 <li>Block or restrict other users.</li>
-                <li>Request account deletion.</li>
+                <li>Request account deletion using the in-app account controls or the instructions at <a href="/account-deletion.html" className="text-primary hover:underline">muvit.site/account-deletion.html</a>.</li>
                 <li>Request access, correction or deletion of personal information where required by law.</li>
               </ul>
             </section>
@@ -202,7 +200,7 @@ const Privacy = () => {
               <h3 className="text-lg font-semibold">14. Contact Us</h3>
               <p>If you have questions about this Privacy Policy or your information, contact Muv'it support.</p>
               <p>
-                Email: <a href="mailto:support@muvit.app" className="text-primary hover:underline">support@muvit.app</a>
+                Email: <a href="mailto:semogrouptech@gmail.com" className="text-primary hover:underline">semogrouptech@gmail.com</a>
               </p>
               <p>App: Muv'it</p>
               <p>Country: South Africa</p>
